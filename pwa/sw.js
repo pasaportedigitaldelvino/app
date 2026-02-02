@@ -3,7 +3,7 @@ const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icono-512.png'
+  './icon-512.png'
 ];
 
 // Instalar y guardar archivos en caché
