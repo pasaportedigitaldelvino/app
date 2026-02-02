@@ -4,7 +4,7 @@
   "description": "Página temporal de mantenimiento",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#800000",
+  "background_color": "#6a1530",
   "theme_color": "#a52a2a",
   "orientation": "portrait",
   "icons": [
