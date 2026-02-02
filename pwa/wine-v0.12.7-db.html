@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta name="theme-color" content="#5e0b15">
+<meta name="msapplication-TileColor" content="#5e0b15"> 
+<meta name="apple-mobile-web-app-status-bar-style" content="black"> 
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default"> 
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pasaporte del Vino</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+    /* --- VARIABLES Y ESTILOS BASE MODERNOS --- */
+    :root {
+        --primary: #8B1E3F;
+        --primary-dark: #6A1530;
+        --primary-light: #A52C4D;
+        --secondary: #2C5530;
+        --accent: #FFD166;
+        --background: #F8F7F4;
+        --surface: #FFFFFF;
+        --text: #2D2D2D;
+        --text-light: #666666;
+        --border: #E5E5E5;
+        --success: #27AE60;
+        --warning: #F39C12;
+        --error: #E74C3C;
+        --info: #3498DB;
+        --scanner-accent-green: #2ecc71;
+        --scanner-success-color: #27ae60;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --radius-xl: 30px;
+        --transition-fast: 0.2s ease;
+        --transition-normal: 0.3s ease;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background-color: var(--background); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; font-size: 16px; line-height: 1.5; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: var(--shadow-md); position: fixed; width: 100%; top: 0; z-index: 1000; height: 64px; backdrop-filter: blur(10px); }
+    .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; cursor: pointer; transition: var(--transition-fast); }
+    .logo:hover { opacity: 0.9; transform: translateX(-2px); }
+    .logo i { font-size: 1.8rem; color: var(--accent); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .menu-icon { cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); transition: var(--transition-normal); font-size: 1.2rem; }
+    .menu-icon:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+    
+    #menu { position: fixed; top: 0; right: -320px; width: 320px; height: 100%; background: var(--surface); box-shadow: var(--shadow-lg); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; padding: 80px 24px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    #menu.active { right: 0; }
+    #menu .close { position: absolute; top: 24px; right: 24px; font-size: 1.8rem; cursor: pointer; color: var(--text-light); transition: var(--transition-fast); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    #menu .close:hover { background: var(--background); color: var(--primary); }
+    #menu ul { list-style: none; flex: 1; }
+    #menu li { margin-bottom: 4px; }
+    #menu a { text-decoration: none; color: var(--text); font-size: 1.1rem; font-weight: 500; display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: var(--radius-md); transition: var(--transition-fast); position: relative; overflow: hidden; }
+    #menu a::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--primary); transform: scaleY(0); transition: var(--transition-normal); }
+    #menu a:hover { background: var(--background); transform: translateX(4px); }
+    #menu a:hover::before { transform: scaleY(1); }
+    #menu a i { width: 24px; color: var(--primary); font-size: 1.2rem; }
+    
+    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: none; z-index: 1500; animation: fadeIn 0.3s ease; }
+    #overlay.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    main { flex: 1; padding: 80px 20px 120px; overflow-y: auto; background-color: var(--background); position: relative; }
+    
+    /* Fondos marca de agua */
+    #registrar::before, #mipasaporte::before, #terminos::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><path d="M100,50 Q150,30 180,80 Q130,100 180,120 Q130,140 100,180 Q70,140 20,120 Q70,100 20,80 Q50,30 100,50Z" fill="%232C5530"/></svg>'); background-repeat: repeat; pointer-events: none; z-index: 0; }
+    #establecimientos::before, #miestablecimiento::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><path d="M50,50 C70,30 130,30 150,50 C170,70 170,130 150,150 C130,170 70,170 50,150 C30,130 30,70 50,50Z" fill="%23FFD166"/></svg>'); background-repeat: repeat; pointer-events: none; z-index: 0; }
+    #admin::before, #admin-login::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><rect x="40" y="40" width="120" height="120" rx="15" fill="%233498DB"/></svg>'); background-repeat: repeat; pointer-events: none; z-index: 0; }
+    
+    .page { display: none; position: relative; z-index: 1; animation: slideUp 0.4s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .page.active { display: block; }
+    
+    .page h1 { margin-bottom: 24px; color: var(--primary); font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; position: relative; display: inline-block; }
+    .page h1::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 60px; height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 2px; }
+    .page h2 { margin: 32px 0 20px; color: var(--secondary); font-size: 1.6rem; font-weight: 700; text-align: left; }
+    .page ul, .page ol, .page p { text-align: left; margin: 16px auto; max-width: 800px; line-height: 1.6; }
+    .page p { font-size: 1.1rem; color: var(--text-light); }
+    
+    .cta-button { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 18px 32px; font-size: 1.2rem; font-weight: 600; border: none; border-radius: var(--radius-lg); cursor: pointer; margin: 24px auto; display: block; transition: all var(--transition-normal); box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
+    .cta-button::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: var(--transition-normal); }
+    .cta-button:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .cta-button:hover::after { left: 100%; }
+    
+    form { max-width: 500px; margin: 0 auto; text-align: left; background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+    label { display: block; margin-top: 20px; margin-bottom: 8px; font-weight: 600; color: var(--text); }
+    input[type="email"], input[type="password"], input[type="tel"], input[type="text"], textarea, select { width: 100%; padding: 16px; margin-top: 4px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 1rem; transition: var(--transition-fast); background: var(--background); }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139, 30, 63, 0.1); }
+    
+    .password-container { position: relative; }
+    .password-container input { padding-right: 50px; width: 100%; box-sizing: border-box; }
+    .password-container i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light); background: var(--background); padding: 8px; border-radius: var(--radius-sm); transition: var(--transition-fast); }
+    .password-container i:hover { color: var(--primary); background: var(--surface); }
+    
+    button[type="submit"] { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 16px; width: 100%; border: none; border-radius: var(--radius-md); margin-top: 24px; cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: var(--transition-normal); box-shadow: var(--shadow-sm); }
+    button[type="submit"]:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    
+    #error-message, #login-error, #success-message, #admin-login-error { display: none; margin-top: 16px; padding: 12px; border-radius: var(--radius-md); border-left: 4px solid var(--error); background: rgba(231, 76, 60, 0.1); color: var(--error); }
+    #success-message { border-left: 4px solid var(--success); background: rgba(39, 174, 96, 0.1); color: var(--success); }
+    #error-message:not(:empty), #login-error:not(:empty), #success-message:not(:empty), #admin-login-error:not(:empty) { display: block; }
+    
+    footer { display: flex; justify-content: space-around; align-items: center; padding: 12px 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; position: fixed; width: 100%; bottom: 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1); z-index: 1000; height: 80px; backdrop-filter: blur(10px); }
+    .footer-icon { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; transition: all var(--transition-normal); padding: 8px; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.05); }
+    .footer-icon:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+    .footer-icon i { font-size: 1.2rem; margin-bottom: 6px; color: var(--accent); }
+    .footer-icon span { font-size: 0.75rem; font-weight: 600; text-align: center; line-height: 1.1; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    
+    @media (max-width: 768px) { #menu { width: 85%; right: -85%; } .page h1 { font-size: 1.8rem; } form { padding: 24px; } .footer-icon { width: 50px; } .footer-icon i { font-size: 1.6rem; } .footer-icon span { font-size: 0.7rem; } main { padding: 80px 20px 100px; } }
+    @media (min-width: 1024px) { main { max-width: 900px; margin: 0 auto; } }
+    
+    .table-wrapper { margin-bottom: 40px; overflow-x: auto; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 24px; }
+    table { width: 100%; border-collapse: collapse; background-color: var(--surface); border-radius: var(--radius-md); overflow: hidden; }
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background-color: var(--primary); color: white; font-weight: 600; position: relative; cursor: pointer; user-select: none; transition: var(--transition-fast); }
+    th:hover { background-color: var(--primary-dark); }
+    tr:hover { background-color: rgba(139, 30, 63, 0.05); }
+    
+    .delete-all-btn { background: linear-gradient(135deg, var(--error) 0%, #C0392B 100%); color: white; padding: 12px 24px; border: none; border-radius: var(--radius-md); cursor: pointer; margin-bottom: 24px; font-weight: 600; transition: var(--transition-normal); box-shadow: var(--shadow-sm); }
+    .delete-all-btn:hover { background: linear-gradient(135deg, #C0392B 0%, #A93226 100%); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    
+    .logout-btn { background: linear-gradient(135deg, var(--secondary) 0%, #1E8449 100%); color: white; padding: 12px 24px; border: none; border-radius: var(--radius-md); cursor: pointer; margin-top: 20px; font-weight: 600; transition: var(--transition-normal); box-shadow: var(--shadow-sm); }
+    .logout-btn:hover { background: linear-gradient(135deg, #1E8449 0%, #145A32 100%); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin: 32px 0; text-align: center; }
+    .step-card { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border-top: 6px solid var(--primary); transition: var(--transition-normal); position: relative; overflow: hidden; }
+    .step-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .step-card i { font-size: 2.5rem; color: var(--primary); margin-bottom: 16px; display: block; }
+    .step-card strong { display: block; margin-bottom: 8px; font-size: 1.2rem; color: var(--text); }
+    
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-right: 10px; color: var(--primary); transition: var(--transition-fast); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+    .action-btn:hover { color: var(--primary-dark); background: var(--background); }
+    
+    .establecimientos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .est-card { background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); transition: all var(--transition-normal); display: flex; flex-direction: column; border: 1px solid var(--border); }
+    .est-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .est-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 20px; position: relative; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+    .est-type-badge { position: absolute; top: 16px; right: 16px; background-color: var(--accent); color: var(--primary-dark); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; box-shadow: var(--shadow-sm); }
+    .est-body { padding: 20px; flex: 1; text-align: left; }
+    .est-body h3 { margin-bottom: 12px; font-size: 1.3rem; color: var(--text); font-weight: 700; }
+    .est-body p { font-size: 0.95rem; color: var(--text-light); margin-bottom: 10px; margin-left: 0; }
+    .est-footer { padding: 16px 20px; background-color: var(--background); border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-light); text-align: right; }
+    
+    .mi-establecimiento-form { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 500px; margin: 0 auto; border: 1px solid var(--border); }
+    .mi-establecimiento-form h2 { margin-bottom: 24px; color: var(--primary); }
+    .est-panel { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 800px; margin: 0 auto; border: 1px solid var(--border); }
+    .est-controls { display: flex; justify-content: center; gap: 20px; margin-top: 24px; flex-wrap: wrap; }
+    .scan-btn { background: linear-gradient(135deg, var(--info) 0%, #2980b9 100%); color: white; padding: 16px 32px; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: var(--shadow-md); transition: var(--transition-normal); display: flex; align-items: center; gap: 10px; }
+    .scan-btn:hover { background: linear-gradient(135deg, #2980b9 0%, #1F618D 100%); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .est-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin: 32px 0; }
+    .stat-card { background: linear-gradient(135deg, var(--surface) 0%, #F9F9F9 100%); padding: 24px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border); transition: var(--transition-normal); }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+    .stat-label { font-size: 1rem; color: var(--text-light); }
+    .sellos-received-list { max-height: 300px; overflow-y: auto; margin-top: 20px; background: var(--background); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border); }
+    
+    .premio-section { background: linear-gradient(135deg, #d4edda 0%, #C8E6C9 100%); color: #155724; padding: 24px; border-radius: var(--radius-lg); margin: 24px auto; max-width: 600px; border-left: 6px solid var(--success); }
+    
+    .admin-login-form { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 400px; margin: 0 auto; border: 1px solid var(--border); }
+    .admin-login-form h2 { margin-bottom: 24px; color: var(--primary); }
+    
+    #search-container { position: sticky; bottom: 5px; background: var(--surface); padding: 8px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); z-index: 100; margin-top: 8px; display: flex; align-items: center; border: 1px solid var(--border); }
+    #search-input { width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 1rem; margin-right: 12px; transition: var(--transition-fast); }
+    #search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139, 30, 63, 0.1); outline: none; }
+    #search-icon { color: var(--primary); font-size: 1.3rem; cursor: pointer; padding: 12px; border-radius: var(--radius-md); transition: var(--transition-fast); }
+    #search-icon:hover { background: var(--background); }
+    
+    .stats-overview { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 800px; margin: 0 auto; border: 1px solid var(--border); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 24px; }
+    .stat-item { background: linear-gradient(135deg, var(--surface) 0%, #F9F9F9 100%); padding: 24px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border); transition: var(--transition-normal); }
+    .stat-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .stat-number { font-size: 2.8rem; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+    .stat-title { font-size: 1rem; color: var(--text-light); margin-top: 4px; }
+
+    /* Recaptcha Simulado */
+    .recaptcha-box { background: #f9f9f9; border: 1px solid #d3d3d3; border-radius: 3px; width: 100%; max-width: 304px; height: 78px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; margin: 20px auto; box-shadow: 0 0 4px 1px rgba(0,0,0,0.08); user-select: none; position: relative; }
+    .recaptcha-left { display: flex; align-items: center; gap: 12px; }
+    .recaptcha-checkbox { width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px; background: #fff; cursor: pointer; appearance: none; -webkit-appearance: none; position: relative; transition: all 0.2s; outline: none; }
+    .recaptcha-checkbox:hover { border-color: #b2b2b2; }
+    .recaptcha-checkbox:checked { border-color: transparent; background: transparent; }
+    .recaptcha-checkbox:focus:not(:checked) { border-color: #4285f4; }
+    .recaptcha-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 10px; height: 16px; border: solid #0F9D58; border-width: 0 4px 4px 0; transform: rotate(45deg); animation: checkAnim 0.2s ease forwards; }
+    @keyframes checkAnim { from { opacity: 0; transform: rotate(45deg) scale(0.5); } to { opacity: 1; transform: rotate(45deg) scale(1); } }
+    .recaptcha-label { font-family: Roboto, helvetica, arial, sans-serif; font-size: 14px; font-weight: 400; color: #000; cursor: pointer; }
+    .recaptcha-right { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: 10px; }
+    .recaptcha-logo { width: 32px; height: 32px; margin-bottom: 2px; opacity: 0.7; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48px' height='48px'%3E%3Cpath fill='%234285F4' d='M24 30.1c-3.4 0-6.1-2.7-6.1-6.1 0-3.4 2.7-6.1 6.1-6.1s6.1 2.7 6.1 6.1C30.1 27.4 27.4 30.1 24 30.1zM24 19.9c-2.3 0-4.1 1.8-4.1 4.1s1.8 4.1 4.1 4.1 4.1-1.8 4.1-4.1S26.3 19.9 24 19.9z'/%3E%3Cpath fill='%234285F4' d='M43.8 24c0 10.9-8.9 19.8-19.8 19.8 -3.1 0-6-0.7-8.7-2l1.6-2.8c2.1 1 4.5 1.6 7.1 1.6 9.2 0 16.6-7.4 16.6-16.6 0-2.8-0.7-5.4-1.9-7.7l2.8-1.6C42.9 17.6 43.8 20.7 43.8 24z'/%3E%3Cpath fill='%234285F4' d='M22.5 4.3L19.7 9.1C15.9 8 11.8 8.4 8.2 10.5L9.8 13.3C12.7 11.6 16.1 11.2 19.3 12.3L16.5 17.1 29.5 17.1 29.5 4.3z'/%3E%3Cpath fill='%234285F4' d='M4.2 24c0-4.8 1.7-9.3 4.6-12.8L6.2 9C2.7 13.1 0.6 18.3 0.6 24c0 2.2 0.3 4.3 0.9 6.3l3-1C4.3 27.4 4.2 25.7 4.2 24z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; background-size: contain; transition: opacity 0.3s; }
+    .recaptcha-box:hover .recaptcha-logo { opacity: 1; }
+    .recaptcha-text { font-size: 10px; color: #555; text-align: center; line-height: 1.2; }
+    .recaptcha-text a { color: #555; text-decoration: none; }
+    .recaptcha-text a:hover { text-decoration: underline; }
+    
+    .checkbox-group { display: flex; align-items: flex-start; margin-top: 16px; gap: 12px; }
+    .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+    .checkbox-group label { margin-top: 0; font-weight: 500; font-size: 0.95rem; cursor: pointer; line-height: 1.4; }
+    .checkbox-group label a { color: var(--primary); text-decoration: underline; }
+    
+    /* Overlay Scanner */
+    #scanner-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; }
+    #camera-window { position: relative; width: calc(100vw - 40px); height: calc(100vw - 40px); max-width: 400px; max-height: 400px; background-color: #000; overflow: hidden; border-radius: var(--radius-lg); border: 3px solid rgba(255, 255, 255, 0.2); transition: all var(--transition-normal); box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
+    #camera-window.detected { border: 4px solid var(--scanner-accent-green) !important; box-shadow: 0 0 30px rgba(46, 204, 113, 0.4); }
+    #camera-window canvas { width: 100%; height: 100%; object-fit: cover; }
+    #qr-result-label { color: white; margin-top: 24px; font-size: 1.1rem; min-height: 1.5em; padding: 0 20px; word-break: break-all; text-align: center; background: rgba(255, 255, 255, 0.1); padding: 12px 20px; border-radius: var(--radius-md); backdrop-filter: blur(10px); }
+    #btn-sellar-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--scanner-success-color) 0%, #219653 100%); color: white; border: 4px solid white; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: none; box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4); animation: popIn 0.3s ease-out; z-index: 10; text-align: center; line-height: 92px; transition: all var(--transition-normal); }
+    #btn-sellar-overlay:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 12px 35px rgba(39, 174, 96, 0.6); }
+    @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0); } 80% { transform: translate(-50%, -50%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(1); } }
+    #scanner-success-msg { display: none; color: white; background: linear-gradient(135deg, var(--scanner-success-color) 0%, #219653 100%); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); font-size: 1.3rem; font-weight: 600; max-width: 80%; text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5001; animation: slideIn 0.4s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+    /* Landing */
+    #inicio .landing-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; text-align: center; padding: 5rem 1.5rem 4rem; position: relative; overflow: hidden; margin: -80px -20px 0 -20px; width: calc(100% + 40px); }
+    #inicio .landing-header::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&q=80&w=2000') center/cover; opacity: 0.18; mix-blend-mode: overlay; }
+    #inicio .landing-header h1 { font-size: clamp(2.6rem, 7vw, 4.8rem); font-weight: 800; margin-bottom: 0.8rem; text-shadow: 0 3px 12px rgba(0,0,0,0.4); color: white; }
+    #inicio .subtitle { font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 500; opacity: 0.95; max-width: 720px; margin: 0 auto 2rem; color: white; }
+    #inicio .landing-description { max-width: 720px; margin: 0 auto 2.5rem; font-size: 1.15rem; opacity: 0.92; color: white; }
+    #inicio .landing-section { padding: 4rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    #inicio .landing-section h2 { color: var(--primary); font-size: clamp(2rem, 5vw, 2.8rem); text-align: center; margin-bottom: 2.5rem; position: relative; }
+    #inicio .landing-section h2::after { content: ''; width: 80px; height: 4px; background: var(--accent); position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); border-radius: 2px; }
+    #inicio .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.8rem; margin-bottom: 3rem; }
+    #inicio .step-card { background: var(--surface); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; border-top: 6px solid var(--primary); }
+    #inicio .step-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-lg); }
+    #inicio .step-number { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; margin: 0 auto 1.2rem; }
+    #inicio .terms, #inicio .privacy { background: var(--surface); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); margin: 2rem auto; max-width: 900px; }
+    #inicio .highlight { color: var(--primary); font-weight: 700; font-size: 1.2rem; margin: 2rem 0; }
+    #inicio .cta-final { text-align: center; margin: 4rem 0 2rem; }
+    #inicio .landing-section ul { padding-left: 1.6rem; margin: 1.2rem 0; }
+    #inicio .landing-section li { margin-bottom: 0.5rem; }
+    #inicio .landing-header .cta-button { background: linear-gradient(135deg, var(--accent) 0%, #d4af37 100%); color: var(--text); font-weight: 700; padding: 1.1rem 2.4rem; border-radius: var(--radius-lg); font-size: 1.2rem; transition: all 0.28s ease; box-shadow: 0 6px 20px rgba(200, 159, 58, 0.35); margin: 0.8rem; border: none; cursor: pointer; display: inline-block; }
+    #inicio .landing-header .cta-button:hover { background: linear-gradient(135deg, #d4af37 0%, #c89f3a 100%); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(200, 159, 58, 0.5); }
+    #inicio .landing-section .cta-button { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 1.2rem 2.8rem; font-size: 1.3rem; border-radius: var(--radius-lg); margin: 0.8rem; }
+    #inicio .landing-section .cta-button:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); }
+    @media (max-width: 768px) { #inicio .landing-header { padding: 4rem 1rem 3rem; margin: -80px -20px 0 -20px; width: calc(100% + 40px); } #inicio .landing-section { padding: 3rem 1rem; } #inicio .landing-header .cta-button { padding: 1rem 2rem; font-size: 1.1rem; } }
+</style>
+</head>
+<body>
+<header>
+<div class="logo" onclick="navigateTo('inicio')"><i class="fas fa-wine-bottle"></i> Pasaporte del Vino</div>
+<div class="menu-icon" id="menu-icon">
+    <i class="fas fa-ellipsis-v"></i>
+</div>
+</header>
+<div id="menu">
+<div class="close">&times;</div>
+<ul id="menu-items"></ul>
+</div>
+<div id="overlay"></div>
+<main>
+<section id="inicio" class="page">
+    <div class="landing-header">
+        <h1>Pasaporte del Vino</h1>
+        <p class="subtitle">Un viaje con sentido por las Rutas del Vino de Valladolid</p>
+        <p class="landing-description">
+            Si te gusta el enoturismo, si eres un apasionado del vino y aún no conoces las experiencias turísticas de nuestras Rutas del Vino… 
+            <strong>¡regístrate ahora y empieza a coleccionar sellos!</strong>
+        </p>
+        <button class="cta-button" onclick="navigateTo('registrar')">
+            <i class="fas fa-passport"></i> Registra tu Pasaporte
+        </button>
+    </div>
+    <section class="landing-section">
+        <h2>¿Cómo funciona?</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Regístrate o descárgate el pasaporte</h3>
+                <p>Consigue tu pasaporte digital registrándote o descárgate la hoja de sellado en PDF.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Visita y disfruta</h3>
+                <p>Acude a los establecimientos de las Rutas del Vino. Consulta localización y horarios en el listado de colaboradores.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Consigue sellos</h3>
+                <p>Consigue al menos <strong>4 sellos diferentes</strong>. En la versión digital se registran automáticamente; en papel, sella en cada visita.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3>¡Gana premios!</h3>
+                <p>Recibe GRATIS un lote de productos "Alimentos de Valladolid" + participa en el sorteo de 4 experiencias TOP.</p>
+            </div>
+        </div>
+        <div class="cta-final">
+            <button class="cta-button" onclick="navigateTo('registrar')">
+                <i class="fas fa-passport"></i> Registra tu Pasaporte ahora
+            </button>
+        </div>
+    </section>
+    <section class="landing-section">
+        <div class="terms">
+            <h2>Premios y sorteo</h2>
+            <p>Por cada pasaporte con <strong>mínimo 4 sellos distintos</strong> recibido antes del <strong>30 de diciembre de 2025</strong>:</p>
+            <ul>
+                <li>Lote GRATIS de productos <strong>"Alimentos de Valladolid, a gusto de todos"</strong></li>
+                <li>Descuentos en entradas a Centros Turísticos provinciales</li>
+            </ul>
+            <p class="highlight">Sorteo → 4 experiencias de enoturismo TOP para dos personas (sorteo en enero 2026)</p>
+        </div>
+    </section>
+</section>
+
+<section id="terminos" class="page">
+    <h1>Términos y Condiciones</h1>
+    <div class="terms" style="max-width: 800px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; box-shadow: var(--shadow-md);">
+        <h2>Condiciones de Registro</h2>
+        <p>Al registrarse en el Pasaporte del Vino, usted acepta las siguientes condiciones:</p>
+        <ul>
+            <li>Sus datos personales serán tratados de acuerdo con la normativa vigente de protección de datos.</li>
+            <li>Usted declara ser mayor de edad.</li>
+            <li>El pasaporte es personal e intransferible.</li>
+            <li>El uso fraudulento de los sellos o la falsificación de los mismos supondrá la anulación del pasaporte y la pérdida de derechos a premios.</li>
+        </ul>
+        <button class="cta-button" onclick="window.history.back()" style="margin-top: 30px;">Volver</button>
+    </div>
+</section>
+
+<section id="registrar" class="page">
+<h1>Registrar pasaporte</h1>
+<div id="registration-container">
+<form id="register-form">
+<label for="nombre">Nombre Completo:</label>
+<input type="text" id="nombre" required placeholder="Tu nombre">
+
+<label for="email">Email:</label>
+<input type="email" id="email" required placeholder="ejemplo@email.com">
+<label for="password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="password" required placeholder="Mínimo 6 caracteres">
+<i class="fas fa-eye" id="toggle-password"></i>
+</div>
+<label for="confirm-password">Confirmar Contraseña:</label>
+<div class="password-container">
+<input type="password" id="confirm-password" required placeholder="Repite tu contraseña">
+<i class="fas fa-eye" id="toggle-confirm-password"></i>
+</div>
+<label for="tlf">Teléfono (opcional):</label>
+<input type="tel" id="tlf" placeholder="+34 600 000 000">
+
+<div class="checkbox-group">
+    <input type="checkbox" id="condiciones-check" required checked>
+    <label for="condiciones-check">He leído y acepto las <a href="#" onclick="event.preventDefault(); navigateTo('terminos');">condiciones de registro</a></label>
+</div>
+<div class="checkbox-group">
+    <input type="checkbox" id="newsletter-check" checked>
+    <label for="newsletter-check">Suscripción Newsletter</label>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-registrar" class="recaptcha-checkbox" required>
+        <label for="recaptcha-registrar" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Crear Pasaporte</button>
+</form>
+</div>
+<div id="error-message"></div>
+<div id="success-message"></div>
+<div id="qr-code"></div>
+<div id="post-register-actions" style="display:none; margin-top: 20px;">
+<button class="cta-button" onclick="navigateTo('mipasaporte')">Ir a Mi Pasaporte</button>
+</div>
+</section>
+
+<section id="mipasaporte" class="page">
+<h1>Mi pasaporte</h1>
+<form id="login-form" style="display: block;">
+<label for="login-email">Email:</label>
+<input type="email" id="login-email" required placeholder="ejemplo@email.com">
+<label for="login-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="login-password" required placeholder="Tu contraseña">
+<i class="fas fa-eye" id="toggle-login-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-login" class="recaptcha-checkbox" required>
+        <label for="recaptcha-login" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Iniciar Sesión</button>
+</form>
+<div id="login-error"></div>
+<div id="pasaporte-info" style="display: none;">
+<p id="pasaporte-email"></p>
+<p id="pasaporte-sellos"></p>
+<div id="premio-section" style="display: none;"></div>
+<div id="pasaporte-qr" style="display: flex; justify-content: center; margin-top: 20px;"></div>
+<button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+</div>
+</section>
+
+<section id="establecimientos" class="page">
+<h1>Nuestros Establecimientos</h1>
+<div class="establecimientos-grid" id="establecimientos-list"></div>
+<div id="search-container">
+<input type="text" id="search-input" placeholder="Buscar establecimiento...">
+<i class="fas fa-search" id="search-icon"></i>
+</div>
+</section>
+
+<section id="miestablecimiento" class="page">
+<h1>Mi Establecimiento</h1>
+<div id="mi-establecimiento-form-container" class="mi-establecimiento-form">
+<form id="mi-establecimiento-login-form">
+<label for="mi-est-email">Email del Establecimiento:</label>
+<input type="email" id="mi-est-email" required placeholder="ejemplo@establecimiento.com">
+<label for="mi-est-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="mi-est-password" required placeholder="Contraseña del establecimiento">
+<i class="fas fa-eye" id="toggle-mi-est-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-est-login" class="recaptcha-checkbox" required>
+        <label for="recaptcha-est-login" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Iniciar Sesión</button>
+</form>
+</div>
+<div id="mi-establecimiento-panel" style="display: none; margin-top: 30px;">
+<div class="est-panel">
+<div id="est-info">
+<h2>Bienvenido, <span id="est-nombre-display"></span></h2>
+<div class="est-controls">
+    <button class="scan-btn" onclick="startScanningOverlay()"><i class="fas fa-qrcode"></i> Escanear QR</button>
+    <button class="logout-btn" onclick="logoutEstablecimiento()" style="margin-top:0;">Cerrar Sesión</button>
+</div>
+<div class="est-stats">
+<div class="stat-card">
+<div class="stat-value" id="sellos-count">0</div>
+<div class="stat-label">Sellos Recibidos</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="visitas-count">0</div>
+<div class="stat-label">Visitantes Diferentes</div>
+</div>
+</div>
+</div>
+<h3>Sellos Recibidos Recientes</h3>
+<div class="sellos-received-list" id="sellos-list"></div>
+</div>
+</div>
+</section>
+
+<section id="admin-login" class="page">
+<h1>Acceso Administrador</h1>
+<div class="admin-login-form">
+<form id="admin-login-form">
+<label for="admin-email">Email:</label>
+<input type="email" id="admin-email" value="admin@admin.com" required>
+<label for="admin-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="admin-password" value="admin" required>
+<i class="fas fa-eye" id="toggle-admin-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-admin" class="recaptcha-checkbox" required>
+        <label for="recaptcha-admin" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Acceder</button>
+</form>
+</div>
+<div id="admin-login-error"></div>
+</section>
+
+<section id="admin" class="page">
+<h1>Panel de Administración</h1>
+<div class="table-wrapper">
+<h2>Pasaportes</h2>
+<table id="pasaporte-table">
+<thead>
+<tr>
+    <th>Detalle</th>
+    <th onclick="sortTable('pasaporte-table', 1, 'number')">ID</th>
+    <th onclick="sortTable('pasaporte-table', 2, 'text')">Email</th>
+    <th onclick="sortTable('pasaporte-table', 3, 'number')">Sellos</th>
+    <th onclick="sortTable('pasaporte-table', 4, 'text')">Nombre</th>
+    <th onclick="sortTable('pasaporte-table', 5, 'text')">Tlf</th>
+    <th onclick="sortTable('pasaporte-table', 6, 'text')">Cond.</th>
+    <th onclick="sortTable('pasaporte-table', 7, 'text')">Subs.</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<h2>Establecimientos</h2>
+<table id="establecimiento-table">
+<thead>
+<tr>
+    <th>Detalle</th>
+    <th onclick="sortTable('establecimiento-table', 1, 'number')">ID</th>
+    <th onclick="sortTable('establecimiento-table', 2, 'text')">Nombre</th>
+    <th onclick="sortTable('establecimiento-table', 3, 'text')">Email</th>
+    <th onclick="sortTable('establecimiento-table', 4, 'text')">Tipo</th>
+    <th onclick="sortTable('establecimiento-table', 5, 'text')">Dirección</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<h2>Sellos</h2>
+<table id="sello-table">
+<thead>
+<tr>
+    <th onclick="sortTable('sello-table', 0, 'number')">ID Pasaporte</th>
+    <th onclick="sortTable('sello-table', 1, 'number')">ID Establecimiento</th>
+    <th onclick="sortTable('sello-table', 2, 'date')">Fecha Registro</th>
+    <th onclick="sortTable('sello-table', 3, 'date')">Fecha Caducidad</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</section>
+
+<section id="estadisticas" class="page">
+<h1>Estadísticas de la Aplicación</h1>
+<div class="stats-overview">
+<div class="stats-grid">
+<div class="stat-item">
+<div class="stat-number" id="total-pasaportes">0</div>
+<div class="stat-title">Pasaportes Registrados</div>
+</div>
+<div class="stat-item">
+<div class="stat-number" id="total-establecimientos">0</div>
+<div class="stat-title">Establecimientos Adheridos</div>
+</div>
+<div class="stat-item">
+<div class="stat-number" id="total-sellos">0</div>
+<div class="stat-title">Sellos Emitidos</div>
+</div>
+<div class="stat-item">
+<div class="stat-number" id="pasaportes-completos">0</div>
+<div class="stat-title">Pasaportes Completos (4+ sellos)</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="altaestablecimiento" class="page">
+<h1>Alta de Establecimiento</h1>
+<div class="mi-establecimiento-form">
+<form id="alta-establecimiento-form">
+<label for="alta-email">Email (Login):</label>
+<input type="email" id="alta-email" required placeholder="email@establecimiento.com">
+
+<label for="alta-nombre">Nombre del Establecimiento:</label>
+<input type="text" id="alta-nombre" required placeholder="Ej. Bodegas Familiares">
+<label for="alta-tipo">Tipo:</label>
+<select id="alta-tipo" required>
+<option value="Bodega">Bodega</option>
+<option value="Restaurante">Restaurante</option>
+<option value="Museo">Museo</option>
+<option value="Alojamiento">Alojamiento</option>
+<option value="Vinoteca">Vinoteca</option>
+</select>
+<label for="alta-direccion">Dirección:</label>
+<input type="text" id="alta-direccion" required placeholder="Calle, Localidad...">
+<label for="alta-descripcion">Descripción Corta:</label>
+<textarea id="alta-descripcion" rows="3" required placeholder="Breve descripción de la experiencia..."></textarea>
+<label for="alta-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="alta-password" required>
+<i class="fas fa-eye" id="toggle-alta-password"></i>
+</div>
+<label for="alta-confirm-password">Confirmar Contraseña:</label>
+<div class="password-container">
+<input type="password" id="alta-confirm-password" required>
+<i class="fas fa-eye" id="toggle-alta-confirm-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-alta" class="recaptcha-checkbox" required>
+        <label for="recaptcha-alta" class="recaptcha-label">No soy un robot</label>
+</div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Registrar Establecimiento</button>
+</form>
+</div>
+</section>
+
+<section id="detalle-pasaporte" class="page">
+    <h1>Detalle del Pasaporte</h1>
+    <div class="est-panel">
+        <div id="detalle-pasaporte-info">
+            <p><strong>ID:</strong> <span id="detalle-pasaporte-id"></span></p>
+            <p><strong>Email:</strong> <span id="detalle-pasaporte-email"></span></p>
+            <p><strong>Nombre:</strong> <span id="detalle-pasaporte-nombre"></span></p>
+            <p><strong>Teléfono:</strong> <span id="detalle-pasaporte-tlf"></span></p>
+            <p><strong>Aceptó condiciones:</strong> <span id="detalle-pasaporte-condiciones"></span></p>
+            <p><strong>Newsletter:</strong> <span id="detalle-pasaporte-newsletter"></span></p>
+            <p><strong>Total Sellos:</strong> <span id="detalle-pasaporte-total-sellos"></span></p>
+            
+            <h3>Sellos Registrados</h3>
+            <div class="sellos-received-list" id="detalle-pasaporte-sellos-list"></div>
+        </div>
+        <div class="est-controls">
+            <button class="cta-button" onclick="navigateTo('admin')">Volver al Panel Admin</button>
+        </div>
+    </div>
+</section>
+
+<section id="detalle-establecimiento" class="page">
+    <h1>Detalle del Establecimiento</h1>
+    <div class="est-panel">
+        <div id="detalle-establecimiento-info">
+            <p><strong>ID:</strong> <span id="detalle-establecimiento-id"></span></p>
+            <p><strong>Nombre:</strong> <span id="detalle-establecimiento-nombre"></span></p>
+            <p><strong>Email:</strong> <span id="detalle-establecimiento-email"></span></p>
+            <p><strong>Tipo:</strong> <span id="detalle-establecimiento-tipo"></span></p>
+            <p><strong>Dirección:</strong> <span id="detalle-establecimiento-direccion"></span></p>
+            <p><strong>Descripción:</strong> <span id="detalle-establecimiento-descripcion"></span></p>
+            
+            <h3>Estadísticas</h3>
+            <div class="est-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="detalle-establecimiento-total-sellos">0</div>
+                    <div class="stat-label">Sellos Emitidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="detalle-establecimiento-visitantes">0</div>
+                    <div class="stat-label">Visitantes Únicos</div>
+                </div>
+            </div>
+            
+            <h3>Sellos Emitidos Recientemente</h3>
+            <div class="sellos-received-list" id="detalle-establecimiento-sellos-list"></div>
+        </div>
+        <div class="est-controls">
+            <button class="cta-button" onclick="navigateTo('admin')">Volver al Panel Admin</button>
+        </div>
+    </div>
+</section>
+</main>
+
+<div id="scanner-overlay">
+    <h1 style="color: white; margin-bottom: 24px; font-size: 2rem;">Escanear QR</h1>
+    <div id="camera-window">
+        <canvas id="scanner-canvas"></canvas>
+        <button id="btn-sellar-overlay" onclick="sellarDesdeScanner()">Sellar</button>
+    </div>
+    <div id="qr-result-label">Buscando código QR...</div>
+    <button onclick="stopScanningOverlay()" style="margin-top: 24px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px 32px; border-radius: var(--radius-md); cursor:pointer; font-size: 1rem; font-weight: 600; backdrop-filter: blur(10px); transition: var(--transition-normal);">Cancelar</button>
+</div>
+
+<div id="scanner-success-msg">
+    <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+    Su pasaporte ha sido sellado con éxito
+</div>
+
+<footer>
+    <div class="footer-icon" onclick="navigateTo('registrar')">
+        <i class="fas fa-plus"></i><span>Registrar</span>
+    </div>
+    <div class="footer-icon" onclick="navigateTo('mipasaporte')">
+        <i class="fas fa-passport"></i><span>Pasaporte</span>
+    </div>
+    <div class="footer-icon" onclick="navigateTo('establecimientos')">
+        <i class="fas fa-store"></i><span>Establec.</span>
+    </div>
+    <div class="footer-icon" onclick="navigateTo('miestablecimiento')">
+        <i class="fas fa-user-tie"></i><span>Mi Establec.</span>
+    </div>
+    <div class="footer-icon" onclick="navigateTo('admin')">
+        <i class="fas fa-cogs"></i><span>Admin</span>
+    </div>
+</footer>
+
+<script>
+// --- CONFIGURACIÓN SUPABASE ---
+const SB_URL = 'https://ggpuicskbxgdelvghnte.supabase.co';
+const SB_KEY = 'sb_publishable_2bdk3ULr8fwqv_D8zn6yMw_Vl-HiEl-'; // Usar exactamente la proporcionada
+const { createClient } = supabase;
+const _supabase = createClient(SB_URL, SB_KEY);
+
+// Variables globales para ordenación
+let currentSort = { tableId: null, columnIndex: null, direction: 'asc', type: null };
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- VARIABLES ESCÁNER ---
+    const scannerVideo = document.createElement("video");
+    const scannerCanvasElement = document.getElementById("scanner-canvas");
+    const scannerCanvas = scannerCanvasElement.getContext("2d", { willReadFrequently: true });
+    const scannerOverlay = document.getElementById("scanner-overlay");
+    const cameraWindow = document.getElementById("camera-window");
+    const resultLabel = document.getElementById("qr-result-label");
+    const btnSellarOverlay = document.getElementById("btn-sellar-overlay");
+    const scannerSuccessMsg = document.getElementById("scanner-success-msg");
+
+    let scanning = false;
+    let localStream = null;
+    let currentQRData = null;
+
+    // Menu contextual
+    const menuIcon = document.getElementById('menu-icon');
+    const menu = document.getElementById('menu');
+    const closeMenuBtn = menu.querySelector('.close');
+    const overlay = document.getElementById('overlay');
+    const pages = document.querySelectorAll('.page');
+    const menuItems = document.getElementById('menu-items');
+
+    function toggleMenu() {
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        loadContextItems();
+    }
+
+    menuIcon.addEventListener('click', toggleMenu);
+    closeMenuBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', () => { if (menu.classList.contains('active')) toggleMenu(); });
+
+    function loadContextItems() {
+        menuItems.innerHTML = '';
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 'inicio';
+        const adminPages = ['admin', 'estadisticas', 'altaestablecimiento'];
+        let items = adminPages.includes(page) ? ['Estadísticas', 'Alta Establecimiento', 'Term. y Condiciones', 'Inicio'] : ['Term. y Condiciones', 'Inicio'];
+        
+        items.forEach(item => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.textContent = item;
+            a.href = '#';
+            a.onclick = (e) => {
+                e.preventDefault();
+                if (item === 'Alta Establecimiento') navigateTo('altaestablecimiento');
+                else if (item === 'Estadísticas') navigateTo('estadisticas');
+                else if (item === 'Term. y Condiciones') navigateTo('terminos');
+                else if (item === 'Inicio') navigateTo('inicio');
+                toggleMenu();
+            };
+            const icon = document.createElement('i');
+            if (item === 'Estadísticas') icon.className = 'fas fa-chart-bar';
+            else if (item === 'Alta Establecimiento') icon.className = 'fas fa-plus-circle';
+            else if (item === 'Term. y Condiciones') icon.className = 'fas fa-file-contract';
+            else if (item === 'Inicio') icon.className = 'fas fa-home';
+            else icon.className = 'fas fa-circle';
+            a.prepend(icon); li.appendChild(a); menuItems.appendChild(li);
+        });
+    }
+
+    window.navigateTo = function(page) {
+        history.pushState(null, '', `?page=${page}`);
+        loadPage();
+    };
+
+    function loadPage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 'inicio';
+        pages.forEach(p => p.classList.remove('active'));
+        const activePage = document.getElementById(page);
+        if (activePage) activePage.classList.add('active');
+        else if (page === 'inicio') document.getElementById('inicio').classList.add('active');
+
+        if (page === 'mipasaporte') loadPasaporteInfo();
+        if (page === 'admin') {
+            if (localStorage.getItem('isAdminLoggedIn') === 'true') loadAdminData();
+            else navigateTo('admin-login');
+        }
+        if (page === 'establecimientos') {
+            renderEstablecimientos();
+            document.getElementById('search-input').value = '';
+        }
+        if (page === 'registrar') {
+            const form = document.getElementById('register-form');
+            form.reset();
+            document.getElementById('post-register-actions').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('qr-code').innerHTML = '';
+            document.getElementById('condiciones-check').checked = true;
+            document.getElementById('newsletter-check').checked = true;
+        }
+        if (page === 'miestablecimiento') {
+            const idEst = localStorage.getItem('currentEstablecimientoId');
+            const loginFormContainer = document.getElementById('mi-establecimiento-form-container');
+            const panel = document.getElementById('mi-establecimiento-panel');
+            if (idEst) {
+                loginFormContainer.style.display = 'none';
+                panel.style.display = 'block';
+                loadEstablecimientoPanel();
+            } else {
+                loginFormContainer.style.display = 'block';
+                document.getElementById('mi-establecimiento-login-form').reset();
+                panel.style.display = 'none';
+            }
+        }
+        if (page === 'estadisticas') loadEstadisticas();
+        
+        // NUEVAS PÁGINAS - No requieren carga adicional al activarse
+        if (page === 'detalle-pasaporte' || page === 'detalle-establecimiento') {
+            // Las páginas de detalle se cargan cuando se navega a ellas desde los botones de ojo
+        }
+    }
+
+    window.addEventListener('popstate', loadPage);
+    
+    // --- HELPERS ---
+    const formatDate = (iso) => {
+        if(!iso) return '';
+        const d = new Date(iso);
+        // Formato DD/MM/AAAA
+        return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+    };
+    
+    const getExpiry = () => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() + 1);
+        return d.toISOString();
+    };
+
+    // --- DB ACTIONS (SUPABASE) ---
+    // Objeto db para mantener consistencia con el código anterior, pero ahora ASYNC
+    window.db = {
+        addPasaporte: async (data) => {
+            const { data: res, error } = await _supabase.from('Pasaporte').insert([data]).select().single();
+            if (error) throw error;
+            return res;
+        },
+        getPasaporte: async (id) => {
+            const { data, error } = await _supabase.from('Pasaporte').select('*').eq('id', id).single();
+            if (error) return null;
+            return data;
+        },
+        getPasaporteByEmail: async (email) => {
+            const { data, error } = await _supabase.from('Pasaporte').select('*').eq('email', email).single();
+            if (error) return null;
+            return data;
+        },
+        // En login usamos el password porque no usamos Supabase Auth, sino tabla custom
+        loginPasaporte: async (email, passwd) => {
+            const { data, error } = await _supabase.from('Pasaporte').select('*').eq('email', email).eq('passwd', passwd).single();
+            if (error) return null;
+            return data;
+        },
+        getSellosByPasaporte: async (id) => {
+            const { data, error } = await _supabase.from('Sello').select('*').eq('id_pasaporte', id);
+            if (error) return [];
+            return data;
+        },
+        addEstablecimiento: async (data) => {
+            const { data: res, error } = await _supabase.from('Establecimiento').insert([data]).select().single();
+            if (error) throw error;
+            return res;
+        },
+        getEstablecimiento: async (id) => {
+            const { data, error } = await _supabase.from('Establecimiento').select('*').eq('id', id).single();
+            if (error) return null;
+            return data;
+        },
+        loginEstablecimiento: async (email, passwd) => {
+            const { data, error } = await _supabase.from('Establecimiento').select('*').eq('email', email).eq('passwd', passwd).single();
+            if (error) return null;
+            return data;
+        },
+        getAllEstablecimientos: async () => {
+            const { data, error } = await _supabase.from('Establecimiento').select('*');
+            if (error) return [];
+            return data;
+        },
+        addSello: async (data) => {
+            const { data: res, error } = await _supabase.from('Sello').insert([data]).select().single();
+            if (error) throw error;
+            return res;
+        },
+        getSellosByEstablecimiento: async (id) => {
+            const { data, error } = await _supabase.from('Sello').select('*').eq('id_establecimiento', id);
+            if (error) return [];
+            return data;
+        },
+        checkSelloExists: async (pid, eid) => {
+            const { data, error } = await _supabase.from('Sello').select('*').eq('id_pasaporte', pid).eq('id_establecimiento', eid).maybeSingle();
+            if (error) return false;
+            return !!data;
+        },
+        // Helpers para Admin
+        getTable: async (table) => {
+            const { data, error } = await _supabase.from(table).select('*');
+            if (error) return [];
+            return data;
+        }
+    };
+
+    // --- LOGICA UI ---
+
+    // Registro
+    const registerForm = document.getElementById('register-form');
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = document.getElementById('error-message');
+        const succ = document.getElementById('success-message');
+        const qrDiv = document.getElementById('qr-code');
+        err.style.display = 'none'; succ.style.display = 'none'; qrDiv.innerHTML = '';
+
+        if (!document.getElementById('recaptcha-registrar').checked) {
+            err.textContent = 'Completa la verificación.'; err.style.display = 'block'; return;
+        }
+        if (!document.getElementById('condiciones-check').checked) {
+            err.textContent = 'Debe aceptar las condiciones.'; err.style.display = 'block'; return;
+        }
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const nombre = document.getElementById('nombre').value.trim(); // NUEVO CAMPO
+        
+        if (password !== document.getElementById('confirm-password').value) {
+            err.textContent = 'Las contraseñas no coinciden.'; err.style.display = 'block'; return;
+        }
+
+        try {
+            // Check duplicado
+            const existing = await db.getPasaporteByEmail(email);
+            if (existing) {
+                err.textContent = 'El email ya está registrado.'; err.style.display = 'block'; return;
+            }
+
+            const newP = await db.addPasaporte({ 
+                email, 
+                passwd: password, 
+                nombre: nombre,
+                tlf: document.getElementById('tlf').value,
+                acep_cond: document.getElementById('condiciones-check').checked,
+                suscrito: document.getElementById('newsletter-check').checked
+            });
+            
+            succ.textContent = '¡Pasaporte creado con éxito!'; succ.style.display = 'block';
+            const qrUrl = `airooc41n.github.io/miapp?email=${encodeURIComponent(email)}&Id=${newP.id}`;
+            new QRCode(qrDiv, { text: qrUrl, width: 300, height: 300, colorDark: "#8B1E3F", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.H });
+            
+            localStorage.setItem('currentPasaporteId', newP.id);
+            document.getElementById('post-register-actions').style.display = 'block';
+            registerForm.style.display = 'none';
+        } catch (ex) {
+            console.error(ex);
+            err.textContent = 'Error al registrar: ' + ex.message; err.style.display = 'block';
+        }
+    });
+
+    // Login Pasaporte
+    const loginForm = document.getElementById('login-form');
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const loginError = document.getElementById('login-error');
+        loginError.style.display = 'none';
+
+        if (!document.getElementById('recaptcha-login').checked) {
+            loginError.textContent = 'Completa la verificación.'; loginError.style.display = 'block'; return;
+        }
+
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-password').value;
+        
+        try {
+            const p = await db.loginPasaporte(email, pass);
+            if (!p) {
+                loginError.textContent = 'Credenciales incorrectas.'; loginError.style.display = 'block'; return;
+            }
+            localStorage.setItem('currentPasaporteId', p.id);
+            loadPasaporteInfo();
+        } catch(ex) {
+            loginError.textContent = 'Error de conexión.'; loginError.style.display = 'block';
+        }
+    });
+
+    async function loadPasaporteInfo() {
+        const id = localStorage.getItem('currentPasaporteId');
+        const info = document.getElementById('pasaporte-info');
+        const loginF = document.getElementById('login-form');
+        const premioSection = document.getElementById('premio-section');
+
+        if (!id) { loginF.style.display = 'block'; info.style.display = 'none'; return; }
+
+        try {
+            const p = await db.getPasaporte(id);
+            if (!p) { logout(); return; }
+
+            loginF.style.display = 'none';
+            info.style.display = 'block';
+            document.getElementById('pasaporte-email').textContent = `Email: ${p.email}`;
+            
+            const sellos = await db.getSellosByPasaporte(id);
+            document.getElementById('pasaporte-sellos').textContent = `Sellos: ${sellos.length}`;
+
+            // Lógica de premio (4 sellos distintos)
+            const estIds = [...new Set(sellos.map(s => s.id_establecimiento))];
+            if (estIds.length >= 4) {
+                premioSection.style.display = 'block';
+                premioSection.innerHTML = '<div class="premio-section"><h3>¡Enhorabuena! Tienes 4 sellos diferentes.</h3><p>Puedes reclamar tu premio.</p></div>';
+            } else {
+                premioSection.style.display = 'none';
+            }
+
+            const qrCont = document.getElementById('pasaporte-qr');
+            qrCont.innerHTML = '';
+            const qrUrl = `airooc41n.github.io/miapp?email=${encodeURIComponent(p.email)}&Id=${p.id}`;
+            new QRCode(qrCont, { text: qrUrl, width: 250, height: 250, colorDark: "#8B1E3F", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.H });
+        } catch (e) { console.error(e); }
+    }
+
+    window.logout = () => { localStorage.removeItem('currentPasaporteId'); loadPasaporteInfo(); };
+
+    // Render Establecimientos
+    window.renderEstablecimientos = async () => {
+        const list = document.getElementById('establecimientos-list');
+        list.innerHTML = '<p>Cargando...</p>';
+        
+        const ests = await db.getAllEstablecimientos();
+        list.innerHTML = '';
+
+        ests.forEach(est => {
+            const card = document.createElement('div');
+            card.className = 'est-card';
+            let iconClass = 'fa-building';
+            if(est.type === 'Bodega') iconClass = 'fa-wine-bottle';
+            if(est.type === 'Restaurante') iconClass = 'fa-utensils';
+            if(est.type === 'Museo') iconClass = 'fa-landmark';
+            if(est.type === 'Alojamiento') iconClass = 'fa-bed';
+            if(est.type === 'Vinoteca') iconClass = 'fa-glass-cheers';
+
+            // Usamos los campos nuevos de la DB
+            card.innerHTML = `
+            <div class="est-header">
+                <i class="fas ${iconClass}" style="font-size: 2.5em; opacity: 0.9;"></i>
+                <span class="est-type-badge">${est.type || 'Varios'}</span>
+            </div>
+            <div class="est-body">
+                <h3>${est.nombre || 'Sin nombre'}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${est.direccion || ''}</p>
+                <p>${est.descripcion || ''}</p>
+            </div>
+            `;
+            card.dataset.nombre = (est.nombre || '').toLowerCase();
+            card.dataset.tipo = (est.type || '').toLowerCase();
+            card.dataset.direccion = (est.direccion || '').toLowerCase();
+            list.appendChild(card);
+        });
+    };
+
+    window.filterEstablecimientos = () => {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.est-card');
+        cards.forEach(card => {
+            const match = (card.dataset.nombre || '').includes(query) || (card.dataset.tipo || '').includes(query) || (card.dataset.direccion || '').includes(query);
+            card.style.display = match ? 'flex' : 'none';
+        });
+    };
+
+    // Login Establecimiento
+    const miEstLoginForm = document.getElementById('mi-establecimiento-login-form');
+    if (miEstLoginForm) {
+        miEstLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!document.getElementById('recaptcha-est-login').checked) { alert('Completa la verificación.'); return; }
+
+            const email = document.getElementById('mi-est-email').value.trim();
+            const password = document.getElementById('mi-est-password').value;
+            
+            try {
+                const est = await db.loginEstablecimiento(email, password);
+                if (!est) { alert('Credenciales incorrectas.'); return; }
+                
+                localStorage.setItem('currentEstablecimientoId', est.id);
+                document.getElementById('mi-establecimiento-form-container').style.display = 'none';
+                document.getElementById('mi-establecimiento-panel').style.display = 'block';
+                loadEstablecimientoPanel();
+            } catch(ex) { alert('Error de conexión.'); }
+        });
+    }
+
+    async function loadEstablecimientoPanel() {
+        const id = localStorage.getItem('currentEstablecimientoId');
+        if (!id) { navigateTo('miestablecimiento'); return; }
+
+        try {
+            const est = await db.getEstablecimiento(id);
+            if (!est) { logoutEstablecimiento(); return; }
+
+            document.getElementById('est-nombre-display').textContent = est.nombre;
+            const sellos = await db.getSellosByEstablecimiento(id);
+            document.getElementById('sellos-count').textContent = sellos.length;
+            const pasaportesUnicos = [...new Set(sellos.map(s => s.id_pasaporte))];
+            document.getElementById('visitas-count').textContent = pasaportesUnicos.length;
+
+            const list = document.getElementById('sellos-list');
+            list.innerHTML = '';
+            if (sellos.length === 0) {
+                list.innerHTML = '<p style="padding: 20px; text-align:center;">No hay sellos.</p>';
+            } else {
+                // Ordenar por fecha (string ISO)
+                sellos.sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+                sellos.slice(0, 10).forEach(s => {
+                    const div = document.createElement('div');
+                    div.style.padding = '12px'; div.style.borderBottom = '1px solid var(--border)';
+                    div.innerHTML = `<div><strong>ID Pasaporte:</strong> ${s.id_pasaporte}</div><div><strong>Fecha:</strong> ${formatDate(s.fecha_reg)}</div>`;
+                    list.appendChild(div);
+                });
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    window.logoutEstablecimiento = () => { localStorage.removeItem('currentEstablecimientoId'); navigateTo('miestablecimiento'); };
+
+    // --- ESCANER ---
+    window.startScanningOverlay = function() {
+        scannerOverlay.style.display = "flex";
+        btnSellarOverlay.style.display = "none";
+        cameraWindow.classList.remove("detected");
+        resultLabel.innerText = "Buscando código QR...";
+        scannerSuccessMsg.style.display = 'none';
+        scanning = true;
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+            localStream = stream; scannerVideo.srcObject = stream; scannerVideo.setAttribute("playsinline", true); scannerVideo.play();
+            requestAnimationFrame(tickOverlay);
+        }).catch(function(err) { alert("Error cámara: " + err); stopScanningOverlay(); });
+    }
+
+    function tickOverlay() {
+        if (!scanning) return;
+        if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+            scannerCanvasElement.height = scannerVideo.videoHeight; scannerCanvasElement.width = scannerVideo.videoWidth;
+            scannerCanvas.drawImage(scannerVideo, 0, 0, scannerCanvasElement.width, scannerCanvasElement.height);
+            var imageData = scannerCanvas.getImageData(0, 0, scannerCanvasElement.width, scannerCanvasElement.height);
+            var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            if (code) {
+                if (!cameraWindow.classList.contains("detected")) cameraWindow.classList.add("detected");
+                resultLabel.innerText = "Detectado.";
+                currentQRData = code.data;
+                if (btnSellarOverlay.style.display !== "block") {
+                    btnSellarOverlay.style.display = "block";
+                    if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(200);
+                }
+            }
+        }
+        requestAnimationFrame(tickOverlay);
+    }
+
+    window.stopScanningOverlay = function() {
+        scanning = false; if (localStream) localStream.getTracks().forEach(track => track.stop()); scannerOverlay.style.display = "none";
+    }
+
+    window.sellarDesdeScanner = async function() {
+        if (!currentQRData) return;
+        const urlParams = new URLSearchParams(currentQRData);
+        let idPasaporte = urlParams.get('Id');
+        if (!idPasaporte && currentQRData.includes('Id=')) idPasaporte = currentQRData.split('Id=')[1].split('&')[0];
+        if (!idPasaporte) { alert('QR no válido.'); return; }
+
+        const currentEstId = localStorage.getItem('currentEstablecimientoId');
+        if (!currentEstId) { alert('Sesión caducada.'); stopScanningOverlay(); return; }
+
+        try {
+            // Verificar pasaporte existe
+            const pass = await db.getPasaporte(idPasaporte);
+            if (!pass) { alert('Pasaporte no encontrado en DB.'); return; }
+
+            // Verificar si ya tiene sello
+            const exists = await db.checkSelloExists(idPasaporte, currentEstId);
+            if (exists) { alert('Este pasaporte ya tiene tu sello.'); return; }
+
+            // Insertar Sello
+            await db.addSello({
+                id_pasaporte: idPasaporte,
+                id_establecimiento: currentEstId,
+                fecha_reg: new Date().toISOString(),
+                fecha_cad: getExpiry() // Calcula 1 año despues
+            });
+
+            scanning = false; if (localStream) localStream.getTracks().forEach(track => track.stop()); scannerOverlay.style.display = "none";
+            scannerSuccessMsg.style.display = 'block';
+            setTimeout(() => { scannerSuccessMsg.style.display = 'none'; loadEstablecimientoPanel(); }, 2000);
+
+        } catch (ex) {
+            alert('Error al sellar: ' + ex.message);
+        }
+    }
+
+    // --- ADMIN ---
+    const adminLoginForm = document.getElementById('admin-login-form');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!document.getElementById('recaptcha-admin').checked) { alert('Verifica recaptcha'); return; }
+            if (document.getElementById('admin-email').value === 'admin@admin.com' && document.getElementById('admin-password').value === 'admin') {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                navigateTo('admin');
+            } else { alert('Credenciales incorrectas'); }
+        });
+    }
+
+    window.loadAdminData = async () => {
+        if (localStorage.getItem('isAdminLoggedIn') !== 'true') { navigateTo('admin-login'); return; }
+
+        // Obtener todos los datos
+        const pasaportes = await db.getTable('Pasaporte');
+        const establecimientos = await db.getTable('Establecimiento');
+        const sellos = await db.getTable('Sello');
+
+        // Contar sellos por pasaporte
+        const conteoSellos = {};
+        sellos.forEach(s => {
+            conteoSellos[s.id_pasaporte] = (conteoSellos[s.id_pasaporte] || 0) + 1;
+        });
+
+        // Pasaportes
+        const tbodyP = document.querySelector('#pasaporte-table tbody');
+        tbodyP.innerHTML = '';
+        pasaportes.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <button class="action-btn" onclick="verDetallePasaporte(${p.id})" title="Ver detalle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+                <td>${p.id}</td>
+                <td>${p.email}</td>
+                <td>${conteoSellos[p.id] || 0}</td>
+                <td>${p.nombre || '-'}</td>
+                <td>${p.tlf || '-'}</td>
+                <td>${p.acep_cond ? 'Sí' : 'No'}</td>
+                <td>${p.suscrito ? 'Sí' : 'No'}</td>`;
+            tbodyP.appendChild(tr);
+        });
+
+        // Establecimientos
+        const tbodyE = document.querySelector('#establecimiento-table tbody');
+        tbodyE.innerHTML = '';
+        establecimientos.forEach(e => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <button class="action-btn" onclick="verDetalleEstablecimiento(${e.id})" title="Ver detalle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+                <td>${e.id}</td>
+                <td>${e.nombre || '-'}</td>
+                <td>${e.email}</td>
+                <td>${e.type || '-'}</td>
+                <td>${e.direccion || '-'}</td>`;
+            tbodyE.appendChild(tr);
+        });
+
+        // Sellos (tabla original sin cambios)
+        const tbodyS = document.querySelector('#sello-table tbody');
+        tbodyS.innerHTML = '';
+        sellos.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.id_pasaporte}</td>
+                <td>${s.id_establecimiento}</td>
+                <td>${formatDate(s.fecha_reg)}</td>
+                <td>${formatDate(s.fecha_cad)}</td>
+            `;
+            tbodyS.appendChild(tr);
+        });
+    };
+
+    window.verDetallePasaporte = async function(id) {
+        try {
+            // Obtener datos del pasaporte
+            const pasaporte = await db.getPasaporte(id);
+            if (!pasaporte) {
+                alert('Pasaporte no encontrado');
+                return;
+            }
+
+            // Obtener sellos del pasaporte
+            const sellos = await db.getSellosByPasaporte(id);
+            
+            // Actualizar información en la página de detalle
+            document.getElementById('detalle-pasaporte-id').textContent = pasaporte.id;
+            document.getElementById('detalle-pasaporte-email').textContent = pasaporte.email;
+            document.getElementById('detalle-pasaporte-nombre').textContent = pasaporte.nombre || 'No disponible';
+            document.getElementById('detalle-pasaporte-tlf').textContent = pasaporte.tlf || 'No disponible';
+            document.getElementById('detalle-pasaporte-condiciones').textContent = pasaporte.acep_cond ? 'Sí' : 'No';
+            document.getElementById('detalle-pasaporte-newsletter').textContent = pasaporte.suscrito ? 'Sí' : 'No';
+            document.getElementById('detalle-pasaporte-total-sellos').textContent = sellos.length;
+
+            // Listar sellos
+            const sellosList = document.getElementById('detalle-pasaporte-sellos-list');
+            sellosList.innerHTML = '';
+            
+            if (sellos.length === 0) {
+                sellosList.innerHTML = '<p style="padding: 20px; text-align:center;">No hay sellos registrados</p>';
+            } else {
+                // Ordenar por fecha descendente
+                sellos.sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+                
+                for (const sello of sellos) {
+                    const establecimiento = await db.getEstablecimiento(sello.id_establecimiento);
+                    const div = document.createElement('div');
+                    div.style.padding = '12px';
+                    div.style.borderBottom = '1px solid var(--border)';
+                    div.innerHTML = `
+                        <div><strong>Establecimiento:</strong> ${establecimiento?.nombre || 'Desconocido'} (ID: ${sello.id_establecimiento})</div>
+                        <div><strong>Fecha de registro:</strong> ${formatDate(sello.fecha_reg)}</div>
+                        <div><strong>Fecha de caducidad:</strong> ${formatDate(sello.fecha_cad)}</div>
+                    `;
+                    sellosList.appendChild(div);
+                }
+            }
+
+            // Navegar a la página de detalle
+            navigateTo('detalle-pasaporte');
+        } catch (error) {
+            console.error('Error al cargar detalle del pasaporte:', error);
+            alert('Error al cargar los detalles del pasaporte');
+        }
+    };
+
+    window.verDetalleEstablecimiento = async function(id) {
+        try {
+            // Obtener datos del establecimiento
+            const establecimiento = await db.getEstablecimiento(id);
+            if (!establecimiento) {
+                alert('Establecimiento no encontrado');
+                return;
+            }
+
+            // Obtener sellos del establecimiento
+            const sellos = await db.getSellosByEstablecimiento(id);
+            const pasaportesUnicos = [...new Set(sellos.map(s => s.id_pasaporte))];
+
+            // Actualizar información en la página de detalle
+            document.getElementById('detalle-establecimiento-id').textContent = establecimiento.id;
+            document.getElementById('detalle-establecimiento-nombre').textContent = establecimiento.nombre || 'No disponible';
+            document.getElementById('detalle-establecimiento-email').textContent = establecimiento.email;
+            document.getElementById('detalle-establecimiento-tipo').textContent = establecimiento.type || 'No disponible';
+            document.getElementById('detalle-establecimiento-direccion').textContent = establecimiento.direccion || 'No disponible';
+            document.getElementById('detalle-establecimiento-descripcion').textContent = establecimiento.descripcion || 'No disponible';
+            document.getElementById('detalle-establecimiento-total-sellos').textContent = sellos.length;
+            document.getElementById('detalle-establecimiento-visitantes').textContent = pasaportesUnicos.length;
+
+            // Listar sellos emitidos
+            const sellosList = document.getElementById('detalle-establecimiento-sellos-list');
+            sellosList.innerHTML = '';
+            
+            if (sellos.length === 0) {
+                sellosList.innerHTML = '<p style="padding: 20px; text-align:center;">No se han emitido sellos</p>';
+            } else {
+                // Ordenar por fecha descendente
+                sellos.sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+                
+                // Mostrar solo los últimos 20 sellos
+                const sellosRecientes = sellos.slice(0, 20);
+                
+                for (const sello of sellosRecientes) {
+                    const pasaporte = await db.getPasaporte(sello.id_pasaporte);
+                    const div = document.createElement('div');
+                    div.style.padding = '12px';
+                    div.style.borderBottom = '1px solid var(--border)';
+                    div.innerHTML = `
+                        <div><strong>Pasaporte ID:</strong> ${sello.id_pasaporte}</div>
+                        <div><strong>Email:</strong> ${pasaporte?.email || 'Desconocido'}</div>
+                        <div><strong>Nombre:</strong> ${pasaporte?.nombre || 'No disponible'}</div>
+                        <div><strong>Fecha de registro:</strong> ${formatDate(sello.fecha_reg)}</div>
+                    `;
+                    sellosList.appendChild(div);
+                }
+                
+                if (sellos.length > 20) {
+                    const div = document.createElement('div');
+                    div.style.padding = '12px';
+                    div.style.textAlign = 'center';
+                    div.style.fontStyle = 'italic';
+                    div.textContent = `... y ${sellos.length - 20} sellos más`;
+                    sellosList.appendChild(div);
+                }
+            }
+
+            // Navegar a la página de detalle
+            navigateTo('detalle-establecimiento');
+        } catch (error) {
+            console.error('Error al cargar detalle del establecimiento:', error);
+            alert('Error al cargar los detalles del establecimiento');
+        }
+    };
+
+    // Alta Establecimiento
+    const altaForm = document.getElementById('alta-establecimiento-form');
+    if (altaForm) {
+        altaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!document.getElementById('recaptcha-alta').checked) { alert('Verifica recaptcha'); return; }
+
+            const pass = document.getElementById('alta-password').value;
+            if (pass !== document.getElementById('alta-confirm-password').value) { alert('Contraseñas no coinciden'); return; }
+            
+            // Check duplicado email
+            const email = document.getElementById('alta-email').value.trim();
+            // No tenemos funcion checkEmailEstablecimiento expuesta pero insert fallará por unique constraint
+            
+            try {
+                await db.addEstablecimiento({
+                    email: email,
+                    passwd: pass,
+                    nombre: document.getElementById('alta-nombre').value,
+                    type: document.getElementById('alta-tipo').value,
+                    direccion: document.getElementById('alta-direccion').value,
+                    descripcion: document.getElementById('alta-descripcion').value
+                });
+                alert('Establecimiento registrado.');
+                altaForm.reset();
+            } catch (ex) { alert('Error al registrar (posible email duplicado): ' + ex.message); }
+        });
+    }
+
+    // Estadísticas
+    window.loadEstadisticas = async () => {
+        const pasaportes = await db.getTable('Pasaporte');
+        const establecimientos = await db.getTable('Establecimiento');
+        const sellos = await db.getTable('Sello');
+
+        document.getElementById('total-pasaportes').textContent = pasaportes.length;
+        document.getElementById('total-establecimientos').textContent = establecimientos.length;
+        document.getElementById('total-sellos').textContent = sellos.length;
+
+        // Calculo complejos (requiere agrupar por JS ya que Supabase free tiene limites en queries complejas)
+        const counts = {};
+        sellos.forEach(s => {
+            if(!counts[s.id_pasaporte]) counts[s.id_pasaporte] = new Set();
+            counts[s.id_pasaporte].add(s.id_establecimiento);
+        });
+        const completos = Object.values(counts).filter(set => set.size >= 4).length;
+        document.getElementById('pasaportes-completos').textContent = completos;
+    };
+
+    // Sorting (Simplificado para tablas HTML cargadas)
+    window.sortTable = function(tableId, colIndex, type) {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let dir = 'asc';
+        if (currentSort.tableId === tableId && currentSort.columnIndex === colIndex) {
+            dir = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        currentSort = { tableId, columnIndex: colIndex, direction: dir, type };
+        
+        rows.sort((a, b) => {
+            const aTxt = a.cells[colIndex].textContent.trim();
+            const bTxt = b.cells[colIndex].textContent.trim();
+            if (type === 'number') return dir === 'asc' ? aTxt - bTxt : bTxt - aTxt;
+            // Date parse DD/MM/AAAA
+            if (type === 'date') {
+                const p = t => { const parts = t.split('/'); return new Date(parts[2], parts[1]-1, parts[0]).getTime(); }
+                return dir === 'asc' ? p(aTxt) - p(bTxt) : p(bTxt) - p(aTxt);
+            }
+            return dir === 'asc' ? aTxt.localeCompare(bTxt) : bTxt.localeCompare(aTxt);
+        });
+        rows.forEach(r => tbody.appendChild(r));
+    };
+
+    // Load inicial
+    loadPage();
+    document.getElementById('search-input').addEventListener('input', filterEstablecimientos);
+    document.querySelectorAll('.password-container i').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            input.type = input.type === 'password' ? 'text' : 'password';
+            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+        });
+    });
+});
+</script>
+</body>
+</html>
