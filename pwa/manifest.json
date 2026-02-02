@@ -2,7 +2,7 @@
   "name": "Sitio en Mantenimiento",
   "short_name": "Mantenimiento",
   "description": "Página temporal de mantenimiento",
-  "start_url": ".",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#800000",
   "theme_color": "#a52a2a",
