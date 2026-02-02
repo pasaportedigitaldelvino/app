@@ -1,20 +1,19 @@
 {
   "name": "Pasaporte del Vino",
   "short_name": "WineApp",
-  "description": "Pasaporte del Vino",
+  "description": "Sella y Gana.",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#6a1530",
-  "theme_color": "#6a1530",
-  "orientation": "portrait",
+  "background_color": "#5e0b15",
+  "theme_color": "#5e0b15",
   "icons": [
     {
-      "src": "https://github.com/pasaportedigitaldelvino/app/blob/main/pwa/icon-192.png",
+      "src": "icono-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://github.com/pasaportedigitaldelvino/app/blob/main/pwa/icon-512.png",
+      "src": "icono-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
