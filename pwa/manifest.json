@@ -1,11 +1,11 @@
 {
-  "name": "Sitio en Mantenimiento",
-  "short_name": "Mantenimiento",
-  "description": "Página temporal de mantenimiento",
+  "name": "Pasaporte del Vino",
+  "short_name": "WineApp",
+  "description": "Pasaporte del Vino",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#6a1530",
-  "theme_color": "#a52a2a",
+  "theme_color": "#6a1530",
   "orientation": "portrait",
   "icons": [
     {
