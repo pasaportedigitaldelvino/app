@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pasaporte-vino-v1.0';
+const CACHE_NAME = 'pasaporte-vino-v1.1';
 const ASSETS = [
   './',
   './index.html',
