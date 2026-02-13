@@ -654,6 +654,11 @@
         border-color: var(--success);
     }
 
+    /* NUEVA CLASE PARA OCULTAR EL BOTÓN CUANDO LA PWA ESTÁ INSTALADA */
+    .pwa-fab.hidden {
+        display: none;
+    }
+
     /* Overlay del modal */
     .pwa-modal-overlay {
         position: fixed;
@@ -3102,7 +3107,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (fab) {
-            fab.classList.add('installed');
+            fab.classList.add('hidden');      // OCULTAR el botón flotante
+            // Opcional: también puedes mantener la clase 'installed' si quieres,
+            // pero al estar oculto no se ve.
+            fab.classList.add('installed');   // (opcional)
             fab.innerHTML = '<i class="fas fa-check"></i>';
         }
         
@@ -3263,6 +3271,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 </script>
 
-<!-- Version: wine-v0.12.13 -->
+<!-- Version: wine-v0.12.14 -->
 </body>
 </html>
