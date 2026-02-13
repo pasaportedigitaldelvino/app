@@ -1,6 +1,6 @@
 {
-  "name": "Pasaporte del Vino",
-  "short_name": "WineApp",
+  "name": "Pasaporte Turistico del Vino",
+  "short_name": "WineTourPSP",
   "description": "Sella y Gana.",
   "start_url": "index.html",
   "display": "standalone",
