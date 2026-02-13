@@ -1,29 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#a52a2a">
-<link rel="apple-touch-icon" href="icon-512.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('¡Service Worker registrado!', reg))
-        .catch(err => console.log('Error al registrar el SW', err));
-    });
-  }
-</script>
-<meta name="theme-color" content="#5e0b15">
-<meta name="msapplication-TileColor" content="#5e0b15"> 
-<meta name="apple-mobile-web-app-status-bar-style" content="black"> 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default"> 
+<!-- META TAGS ESENCIALES PARA PWA (TODOS LOS NAVEGADORES) -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pasaporte Turístico del Vino</title>
+
+<!-- MANIFEST REAL - OBLIGATORIO PARA PWA -->
+<link rel="manifest" href="manifest.json">
+
+<!-- META TAGS PARA iOS (SAFARI) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pasaporte Vino">
+<link rel="apple-touch-icon" href="icon-512.png">
+
+<!-- META TAGS PARA ANDROID / CHROME -->
+<meta name="theme-color" content="#8B1E3F">
+<meta name="msapplication-TileColor" content="#8B1E3F">
+
+<!-- PARA FIREFOX, OPERA, ETC (usa el manifest) -->
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -165,7 +162,7 @@
     .table-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
     .table-header h2 { margin: 0; color: var(--primary); font-size: 1.4rem; }
     .filter-container { background: var(--background); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-    .filter-input { flex: 1 1 35px; padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 0.95rem; transition: var(--transition-fast); }
+    .filter-input { flex: 1 1 36px; padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 0.95rem; transition: var(--transition-fast); }
     .filter-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(139, 30, 63, 0.1); }
     .filter-select { padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); background: white; font-size: 0.95rem; min-width: 150px; }
     .filter-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; transition: var(--transition-normal); display: flex; align-items: center; gap: 8px; }
@@ -619,8 +616,7 @@
         letter-spacing: 1px;
     }
 
-    /* --- NUEVOS ESTILOS PWA - BOTÓN FLOTANTE Y MODAL (ALTERNATIVA 1) --- */
-    /* Botón flotante PWA */
+    /* --- NUEVOS ESTILOS PWA - BOTÓN FLOTANTE Y MODAL --- */
     .pwa-fab {
         position: fixed;
         bottom: 100px;
@@ -1284,7 +1280,7 @@
 
 <section id="admin-login" class="page">
 <h1>Acceso Administrador</h1>
-<div class="admin-login-form">
+<div>
 <form id="admin-login-form">
 <label for="admin-email">Email:</label>
 <input type="email" id="admin-email" value="admin@admin.com" required>
@@ -1667,15 +1663,12 @@
     </div>
 </footer>
 
-<!-- ========== NUEVO: BOTÓN FLOTANTE PWA Y MODAL DE INSTALACIÓN ========== -->
-<!-- Botón flotante PWA -->
+<!-- ========== BOTÓN FLOTANTE PWA Y MODAL DE INSTALACIÓN ========== -->
 <button class="pwa-fab" id="pwaFab" onclick="togglePwaModal()">
     <i class="fas fa-download"></i>
 </button>
 
-<!-- Overlay del modal -->
 <div class="pwa-modal-overlay" id="pwaModalOverlay" onclick="closePwaModal()">
-    <!-- Modal de instalación PWA -->
     <div class="pwa-modal" onclick="event.stopPropagation()">
         <div class="pwa-particles" id="pwaParticles"></div>
         
@@ -1703,7 +1696,6 @@
             <p style="font-style: italic; margin-top: 15px;">La instalación es gratuita y rápida.</p>
         </div>
         
-        <!-- Botón de instalación -->
         <button class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()">
             <i class="fas fa-download"></i>
             <span>Instalar Aplicación</span>
@@ -1728,6 +1720,7 @@ const _supabase = createClient(SB_URL, SB_KEY);
 let currentSort = { tableId: null, columnIndex: null, direction: 'asc', type: null };
 let chartInstances = {};
 let deferredPrompt; // Para PWA
+let isPWAInstalled = false;
 
 // Datos globales para admin y estadísticas
 let globalPasaportes = [];
@@ -3031,8 +3024,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rows.forEach(r => tbody.appendChild(r));
     };
 
-    // ========== NUEVAS FUNCIONES PWA ==========
-    // Crear partículas decorativas para el modal
+    // ========== FUNCIONES PWA MEJORADAS ==========
     function createPwaParticles() {
         const container = document.getElementById('pwaParticles');
         if (!container) return;
@@ -3056,7 +3048,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mostrar/ocultar modal PWA
     window.togglePwaModal = function() {
         const overlay = document.getElementById('pwaModalOverlay');
         overlay.classList.toggle('show');
@@ -3067,58 +3058,74 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pwaModalOverlay').classList.remove('show');
     };
 
-    // Instalar PWA
+    // Función para instalar PWA (mejorada)
     window.installPWA = async function() {
         const installBtn = document.getElementById('pwaInstallBtn');
         const fab = document.getElementById('pwaFab');
         
-        if (!deferredPrompt) {
-            alert('Tu navegador no soporta la instalación de aplicaciones o ya está instalada. Puedes añadir esta página a tu pantalla de inicio desde el menú del navegador.');
-            return;
-        }
-        
-        // Mostrar el prompt de instalación
-        deferredPrompt.prompt();
-        
-        // Esperar la respuesta del usuario
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        // Limpiar el evento
-        deferredPrompt = null;
-        
-        if (outcome === 'accepted') {
-            // Cambiar estado a instalado
-            installBtn.innerHTML = '<i class="fas fa-check"></i><span>¡Instalada!</span>';
-            installBtn.disabled = true;
-            fab.classList.add('installed');
-            fab.innerHTML = '<i class="fas fa-check"></i>';
+        // Para navegadores que soporten beforeinstallprompt
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
             
-            // Cerrar modal después de 1 segundo
-            setTimeout(() => {
-                closePwaModal();
-            }, 1000);
+            if (outcome === 'accepted') {
+                handleInstallSuccess();
+            }
+            deferredPrompt = null;
+        } 
+        // Para iOS/Safari (instrucciones manuales)
+        else if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+            alert('La aplicación ya está instalada en tu dispositivo.');
+        } 
+        else {
+            // Mostrar instrucciones según el navegador
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/.test(navigator.userAgent);
             
-            // Guardar en localStorage que ya se mostró
-            localStorage.setItem('pwaInstalled', 'true');
-        } else {
-            alert('Instalación cancelada. Puedes instalarla más tarde desde el botón flotante.');
+            if (isIOS) {
+                alert('📱 Para instalar en iOS:\n1. Pulsa el botón Compartir (📤)\n2. Selecciona "Añadir a pantalla de inicio"\n3. Confirma la instalación');
+            } else if (isAndroid) {
+                alert('📱 Para instalar en Android:\n1. Abre el menú del navegador (⋮)\n2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio"');
+            } else {
+                alert('📱 Para instalar en escritorio:\nBusca el icono de instalación en la barra de direcciones o usa el menú del navegador.');
+            }
         }
     };
 
-    // Detectar evento beforeinstallprompt
+    function handleInstallSuccess() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const fab = document.getElementById('pwaFab');
+        
+        if (installBtn) {
+            installBtn.innerHTML = '<i class="fas fa-check"></i><span>¡Instalada!</span>';
+            installBtn.disabled = true;
+        }
+        
+        if (fab) {
+            fab.classList.add('installed');
+            fab.innerHTML = '<i class="fas fa-check"></i>';
+        }
+        
+        isPWAInstalled = true;
+        localStorage.setItem('pwaInstalled', 'true');
+        
+        setTimeout(() => {
+            closePwaModal();
+        }, 1500);
+    }
+
+    // Detectar beforeinstallprompt (Chrome, Edge, etc.)
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
         
         const installBtn = document.getElementById('pwaInstallBtn');
-        const fab = document.getElementById('pwaFab');
-        
         if (installBtn) {
             installBtn.disabled = false;
             installBtn.innerHTML = '<i class="fas fa-download"></i><span>Instalar Aplicación</span>';
         }
         
-        // Mostrar el modal automáticamente después de 3 segundos (solo primera vez)
+        // Mostrar modal automáticamente después de 3 segundos (solo primera vez)
         if (!localStorage.getItem('pwaModalShown') && !localStorage.getItem('pwaInstalled')) {
             setTimeout(() => {
                 togglePwaModal();
@@ -3127,45 +3134,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Detectar cuando la PWA está instalada
+    // Detectar cuando la app está instalada
     window.addEventListener('appinstalled', () => {
-        const installBtn = document.getElementById('pwaInstallBtn');
-        const fab = document.getElementById('pwaFab');
-        
-        if (installBtn) {
-            installBtn.innerHTML = '<i class="fas fa-check"></i><span>¡Instalada!</span>';
-            installBtn.disabled = true;
-        }
-        
-        if (fab) {
-            fab.classList.add('installed');
-            fab.innerHTML = '<i class="fas fa-check"></i>';
-        }
-        
-        deferredPrompt = null;
-        localStorage.setItem('pwaInstalled', 'true');
-        
-        // Cerrar modal si está abierto
-        closePwaModal();
+        handleInstallSuccess();
     });
 
-    // Comprobar si ya está en modo standalone (PWA instalada)
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        const installBtn = document.getElementById('pwaInstallBtn');
-        const fab = document.getElementById('pwaFab');
-        
-        if (installBtn) {
-            installBtn.innerHTML = '<i class="fas fa-check"></i><span>Ya instalada</span>';
-            installBtn.disabled = true;
-        }
-        
-        if (fab) {
-            fab.classList.add('installed');
-            fab.innerHTML = '<i class="fas fa-check"></i>';
-        }
-        
-        deferredPrompt = null;
-        localStorage.setItem('pwaInstalled', 'true');
+    // Detectar si ya está en modo standalone (PWA instalada en Android/iOS)
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        handleInstallSuccess();
     }
 
     // --- INICIALIZACIÓN ---
@@ -3179,15 +3155,114 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Inicializar partículas PWA
     createPwaParticles();
 });
 </script>
 
-<!-- ========== GUÍA DE IMPLEMENTACIÓN DE NOTIFICACIONES PUSH ========== -->
-<!-- 
-    [CONTENIDO DE LA GUÍA - SE MANTIENE IGUAL]
-    ...
--->
+<!-- ========== MANIFEST.JSON EMBEBIDO PARA PWA (REAL) ========== -->
+<script>
+    // Crear manifest.json real para que funcione en todos los navegadores
+    (function() {
+        // Solo crear si no existe (evitar duplicados)
+        if (!document.querySelector('link[rel="manifest"]')) {
+            const manifest = {
+                "name": "Pasaporte Turístico del Vino",
+                "short_name": "Pasaporte Vino",
+                "description": "Colecciona sellos en las Rutas del Vino de Valladolid y gana premios",
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#8B1E3F",
+                "theme_color": "#8B1E3F",
+                "orientation": "portrait",
+                "scope": "./",
+                "icons": [
+                    {
+                        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%238B1E3F'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='%23FFD166' font-family='Arial'%3E🍷%3C/text%3E%3C/svg%3E",
+                        "sizes": "192x192",
+                        "type": "image/svg+xml",
+                        "purpose": "any maskable"
+                    },
+                    {
+                        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%238B1E3F'/%3E%3Ctext x='50' y='70' font-size='50' text-anchor='middle' fill='%23FFD166' font-family='Arial'%3E🍷%3C/text%3E%3C/svg%3E",
+                        "sizes": "512x512",
+                        "type": "image/svg+xml",
+                        "purpose": "any maskable"
+                    }
+                ],
+                "categories": ["lifestyle", "travel", "food"],
+                "lang": "es",
+                "dir": "ltr",
+                "prefer_related_applications": false,
+                "related_applications": []
+            };
+            
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+            document.head.appendChild(link);
+            console.log('✅ Manifest PWA creado automáticamente');
+        }
+    })();
+</script>
+
+<!-- ========== SERVICE WORKER PARA OFFLINE ========== -->
+<script>
+    // Registrar Service Worker con estrategia de caché offline
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            // Crear un Service Worker simple inline para garantizar funcionalidad offline
+            const swCode = `
+                const CACHE_NAME = 'pasaporte-vino-v1';
+                const urlsToCache = [
+                    '.',
+                    '${window.location.href.split('?')[0]}',
+                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2',
+                    'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+                    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+                    'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
+                ];
+
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(cache => cache.addAll(urlsToCache))
+                    );
+                });
+
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => response || fetch(event.request))
+                    );
+                });
+
+                self.addEventListener('activate', event => {
+                    event.waitUntil(
+                        caches.keys().then(cacheNames => {
+                            return Promise.all(
+                                cacheNames.map(cacheName => {
+                                    if (cacheName !== CACHE_NAME) {
+                                        return caches.delete(cacheName);
+                                    }
+                                })
+                            );
+                        })
+                    );
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl)
+                .then(reg => console.log('✅ Service Worker registrado con caché offline', reg))
+                .catch(err => console.log('❌ Error al registrar SW', err));
+        });
+    }
+</script>
+
+<!-- Version: wine-v0.12.13 -->
 </body>
 </html>
