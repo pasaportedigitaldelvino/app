@@ -1716,18 +1716,18 @@
 
 <script>
 // --- CONFIGURACIÓN SUPABASE ---
-/*
-const SB_URL = import.meta.env.VITE_SB_URL;
-const SB_KEY = import.meta.env.VITE_SB_KEY;
+
+const SB_URL = '{{SUPABASE_URL}}';
+const SB_KEY = '{{SUPABASE_KEY}}';
 const { createClient } = supabase;
 const _supabase = createClient(SB_URL, SB_KEY);
-*/    
-
+    
+/*
 const SB_URL = 'https://ggpuicskbxgdelvghnte.supabase.co';
 const SB_KEY = 'sb_publishable_2bdk3ULr8fwqv_D8zn6yMw_Vl-HiEl-';
 const { createClient } = supabase;
 const _supabase = createClient(SB_URL, SB_KEY);
-
+*/
     
 // Variables globales
 let currentSort = { tableId: null, columnIndex: null, direction: 'asc', type: null };
@@ -3279,6 +3279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 </script>
 
-<!-- Version: wine-v0.12.14.1 -->
+<!-- Version: wine-v0.12.14.2 -->
 </body>
 </html>
