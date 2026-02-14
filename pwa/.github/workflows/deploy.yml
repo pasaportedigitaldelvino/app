@@ -2,39 +2,10 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Cambia 'main' por tu rama principal si es diferente
+    branches: ["main"]   # Ajusta si tu rama es otra (master, etc.)
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      # Aquí es donde ocurre la magia: pasamos los secretos como variables de entorno
-      - name: Build
-        env:
-          VITE_SB_URL: ${{ secrets.VITE_SB_URL }}
-          VITE_SB_KEY: ${{ secrets.VITE_SB_KEY }}
-        run: |
-          echo "La URL es: $VITE_SB_URL"
-          # Aquí iría tu comando de construcción. Como es HTML plano,
-          # podrías usar un script que genere el archivo final.
-          # Como tu proyecto es un solo HTML, no tienes un comando de build tradicional.
-          # En este caso, el paso de build podría ser simplemente copiar el archivo.
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.' # Sube todo el contenido del repositorio
-
-  deploy:
-    needs: build
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -43,6 +14,20 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # PASO CLAVE: Inyectar las variables de entorno en el HTML
+      - name: Inject environment variables
+        run: |
+          sed -i "s|{{SUPABASE_URL}}|${{ secrets.VITE_SB_URL }}|g" index.html
+          sed -i "s|{{SUPABASE_KEY}}|${{ secrets.VITE_SB_KEY }}|g" index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
