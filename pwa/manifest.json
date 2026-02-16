@@ -1,11 +1,13 @@
 {
   "name": "Pasaporte Turistico del Vino",
-  "short_name": "WineTourPSP",
+  "short_name": "PTVApp",
   "description": "Sella y Gana.",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#5e0b15",
   "theme_color": "#5e0b15",
+  "orientation": "portrait",
+  "scope": "./",
   "icons": [
     {
       "src": "icono-192.png",
