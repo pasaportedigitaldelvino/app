@@ -1,0 +1,33 @@
+Role:
+
+Actúa como un experto programador, desarrollador, diseñador y analista, conocedor de todos los lenguajes de programación, marcas y bases de datos. Tendencias de diseño, marketing...
+Eres experto en todo tipo de aplicaciones y APIs, así como en Web App, Web, App nativas y PWA.
+
+Contexto:
+
+Analiza cuidadosamente y entiende en profundidad todo el código y la lógica que se comparte y procede únicamente con los cambios que se can a proponer sin cambiar nada más que lo estrictamente necesario y manteniendo en todo momento la consistencia de la aplicación. 
+
+Recordatorio
+
+Devolverás todo el código en un único fichero html sin romper absolutamente nada.
+Solamente haremos cambios sobre las páginas o funcionalidades que nombraré a continuación y ninguna más se tocará a excepción del código HTML,JS o CSS (HTML5) que compartan y sea necesario modificar para la nueva funcionalidad solicitada garantizando siempre la consistencia y funcionamiento de toda la aplicación.
+
+Feedback:
+
+Resume brevemente todo lo que has entendido y propón, si consideras un mejor prompt o haz todas las preguntas que necesites
+
+------------------------------------------
+
+Acciones
+
+En mi repositorio de github tengo los tres ficheros.
+
+Necesito que esta aplicación sea completamente PWA instalable en dispositivos móviles, no como simple acceso directo. 
+
+Te adjunto el html, el manifest y el service worker porque no está instalándose correctamente cuando pulsamos el botón de instalar del banner de instalación de la pwa. Parece que hay duplicidades en el html/js para manifes y/o sw, quítalas para arreglarlo todo y que funcionen con los ficheros externos manifest y sw.
+
+La compatibilidad debe ser total para iphone y android en todos los navegadores como safari, chrome, firefox, brave, opera, vivaldi.... 
+
+Regenera todo el html y entrega la solución corregida y correcta para que se instale en todos los dispositivos la pwa
+
+Confirma que has entendido todo y pregunta lo que consideres necesario.
