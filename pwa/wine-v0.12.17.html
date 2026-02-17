@@ -1,0 +1,3870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pasaporte Turístico del Vino</title><!-- MANIFEST EXTERNO (ÚNICO) -->
+<link rel="manifest" href="manifest.json"><!-- META TAGS PARA iOS (SAFARI) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pasaporte Vino">
+<link rel="apple-touch-icon" href="icon-512.png"><!-- META TAGS PARA ANDROID / CHROME -->
+<meta name="theme-color" content="#8B1E3F">
+<meta name="msapplication-TileColor" content="#8B1E3F"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><style>
+    /* --- VARIABLES Y ESTILOS BASE MODERNOS --- */
+    :root {
+        --primary: #8B1E3F;
+        --primary-dark: #6A1530;
+        --primary-light: #A52C4D;
+        --secondary: #2C5530;
+        --accent: #FFD166;
+        --accent-light: #FFE9B0;
+        --background: #F8F7F4;
+        --surface: #FFFFFF;
+        --text: #2D2D2D;
+        --text-light: #666666;
+        --border: #E5E5E5;
+        --success: #27AE60;
+        --warning: #F39C12;
+        --error: #E74C3C;
+        --info: #3498DB;
+        --scanner-accent-green: #2ecc71;
+        --scanner-success-color: #27ae60;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 20px;
+        --radius-xl: 30px;
+        --transition-fast: 0.2s ease;
+        --transition-normal: 0.3s ease;
+        
+        --sello-gris: #E0E0E0;
+        --sello-bodega: #8B1E3F;
+        --sello-restaurante: #2C5530;
+        --sello-museo: #3498DB;
+        --sello-alojamiento: #F39C12;
+        --sello-vinoteca: #9B59B6;
+        
+        --chart-1: #8B1E3F;
+        --chart-2: #2C5530;
+        --chart-3: #FFD166;
+        --chart-4: #3498DB;
+        --chart-5: #E67E22;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background-color: var(--background); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; font-size: 16px; line-height: 1.5; }
+    
+    /* --- HEADER MODIFICADO CON NUEVOS ICONOS --- */
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: var(--shadow-md); position: fixed; width: 100%; top: 0; z-index: 1000; height: 64px; backdrop-filter: blur(10px); }
+    
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    
+    .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; cursor: pointer; transition: var(--transition-fast); }
+    .logo:hover { opacity: 0.9; transform: translateX(-2px); }
+    .logo i { font-size: 1.8rem; color: var(--accent); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    
+    .header-btn { 
+        width: 42px; 
+        height: 42px; 
+        border-radius: var(--radius-md); 
+        background: rgba(255,255,255,0.1); 
+        border: none; 
+        color: white; 
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 1.2rem; 
+        transition: var(--transition-normal);
+        backdrop-filter: blur(5px);
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.08); }
+    .header-btn.register-btn { background: linear-gradient(135deg, var(--accent) 0%, #E5B84D 100%); color: var(--primary-dark); }
+    .header-btn.register-btn:hover { background: linear-gradient(135deg, #E5B84D 0%, var(--accent) 100%); }
+    .header-btn.user-btn { background: rgba(255,255,255,0.15); }
+    .header-btn.user-btn:hover { background: rgba(255,255,255,0.3); }
+    
+    .menu-icon { cursor: pointer; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); transition: var(--transition-normal); font-size: 1.2rem; }
+    .menu-icon:hover { background: rgba(255,255,255,0.2); transform: scale(1.08); }
+    
+    /* --- INDICADOR DE ROL EN HEADER --- */
+    .role-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: white;
+        margin-right: 8px;
+    }
+    .role-indicator i { font-size: 0.9rem; }
+    .role-indicator.admin { background: rgba(231, 76, 60, 0.3); }
+    .role-indicator.establecimiento { background: rgba(46, 204, 113, 0.3); }
+    .role-indicator.pasaporte { background: rgba(255, 209, 102, 0.3); color: var(--primary-dark); }
+    
+    #menu { position: fixed; top: 0; right: -320px; width: 320px; height: 100%; background: var(--surface); box-shadow: var(--shadow-lg); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; padding: 80px 24px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    #menu.active { right: 0; }
+    #menu .close { position: absolute; top: 24px; right: 24px; font-size: 1.8rem; cursor: pointer; color: var(--text-light); transition: var(--transition-fast); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    #menu .close:hover { background: var(--background); color: var(--primary); }
+    #menu ul { list-style: none; flex: 1; }
+    #menu li { margin-bottom: 4px; }
+    #menu a { text-decoration: none; color: var(--text); font-size: 1.1rem; font-weight: 500; display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: var(--radius-md); transition: var(--transition-fast); position: relative; overflow: hidden; }
+    #menu a::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--primary); transform: scaleY(0); transition: var(--transition-normal); }
+    #menu a:hover { background: var(--background); transform: translateX(4px); }
+    #menu a:hover::before { transform: scaleY(1); }
+    #menu a i { width: 24px; color: var(--primary); font-size: 1.2rem; }
+    
+    /* --- NUEVO: MENU HEADER (el menu lateral para otros items) --- */
+    .menu-header {
+        padding: 16px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        margin: -80px -24px 20px;
+        padding: 24px;
+    }
+    .menu-header h3 {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .menu-header p {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.85rem;
+    }
+    
+    .menu-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 12px 0;
+    }
+    .menu-section-title {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 8px 16px;
+        font-weight: 600;
+    }
+    
+    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: none; z-index: 1500; animation: fadeIn 0.3s ease; }
+    #overlay.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    main { flex: 1; padding: 80px 20px 120px; overflow-y: auto; background-color: var(--background); position: relative; }
+    
+    /* Fondos marca de agua */
+    #registrar::before, #mipasaporte::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><path d="M100,50 Q150,30 180,80 Q130,100 180,120 Q130,140 100,180 Q70,140 20,120 Q70,100 20,80 Q50,30 100,50Z" fill="%232C5530"/></svg>'); background-repeat: repeat; pointer-events: none; z-index: 0; }
+    #establecimientos::before, #miestablecimiento::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><path d="M50,50 C70,30 130,30 150,50 C170,70 170,130 150,150 C130,170 70,170 50,150 C30,130 30,70 50,50Z" fill="%23FFD166"/></svg>'); background-repeat: repeat; pointer-events: none; z-index: 0; }
+    #admin::before, #admin-login::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><rect x="40" y="40" width="120" height="120" rx="15" fill="%233498DB"/></svg>'); background-repeat: repeat; pointer-events: none; z-index: 0; }
+    
+    .page { display: none; position: relative; z-index: 1; animation: slideUp 0.4s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .page.active { display: block; }
+    
+    .page h1 { margin-bottom: 24px; color: var(--primary); font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; position: relative; display: inline-block; }
+    .page h1::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 60px; height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 2px; }
+    .page h2 { margin: 32px 0 20px; color: var(--secondary); font-size: 1.6rem; font-weight: 700; text-align: left; }
+    .page ul, .page ol, .page p { text-align: left; margin: 16px auto; max-width: 800px; line-height: 1.6; }
+    .page p { font-size: 1.1rem; color: var(--text-light); }
+    
+    .cta-button { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 18px 32px; font-size: 1.2rem; font-weight: 600; border: none; border-radius: var(--radius-lg); cursor: pointer; margin: 24px auto; display: block; transition: all var(--transition-normal); box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
+    .cta-button::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: var(--transition-normal); }
+    .cta-button:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .cta-button:hover::after { left: 100%; }
+    
+    form { max-width: 500px; margin: 0 auto; text-align: left; background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+    label { display: block; margin-top: 20px; margin-bottom: 8px; font-weight: 600; color: var(--text); }
+    input[type="email"], input[type="password"], input[type="tel"], input[type="text"], textarea, select { width: 100%; padding: 16px; margin-top: 4px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 1rem; transition: var(--transition-fast); background: var(--background); }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139, 30, 63, 0.1); }
+    
+    .password-container { position: relative; }
+    .password-container input { padding-right: 50px; width: 100%; box-sizing: border-box; }
+    .password-container i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light); background: var(--background); padding: 8px; border-radius: var(--radius-sm); transition: var(--transition-fast); }
+    .password-container i:hover { color: var(--primary); background: var(--surface); }
+    
+    button[type="submit"] { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 16px; width: 100%; border: none; border-radius: var(--radius-md); margin-top: 24px; cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: var(--transition-normal); box-shadow: var(--shadow-sm); }
+    button[type="submit"]:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    
+    #error-message, #login-error, #success-message, #admin-login-error { display: none; margin-top: 16px; padding: 12px; border-radius: var(--radius-md); border-left: 4px solid var(--error); background: rgba(231, 76, 60, 0.1); color: var(--error); }
+    #success-message { border-left: 4px solid var(--success); background: rgba(39, 174, 96, 0.1); color: var(--success); }
+    #error-message:not(:empty), #login-error:not(:empty), #success-message:not(:empty), #admin-login-error:not(:empty) { display: block; }
+    
+    /* --- FOOTER DINÁMICO POR ROL --- */
+    footer { display: flex; justify-content: space-around; align-items: center; padding: 12px 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; position: fixed; width: 100%; bottom: 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1); z-index: 1000; height: 80px; backdrop-filter: blur(10px); }
+    .footer-icon { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 60px; transition: all var(--transition-normal); padding: 8px; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.05); }
+    .footer-icon:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+    .footer-icon i { font-size: 1.2rem; margin-bottom: 6px; color: var(--accent); }
+    .footer-icon span { font-size: 0.75rem; font-weight: 600; text-align: center; line-height: 1.1; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .footer-icon.active { background: rgba(255, 255, 255, 0.2); }
+    .footer-icon.active i { color: white; }
+    
+    @media (max-width: 768px) { 
+        #menu { width: 85%; right: -85%; } 
+        .page h1 { font-size: 1.8rem; } 
+        form { padding: 24px; } 
+        .footer-icon { width: 50px; } 
+        .footer-icon i { font-size: 1.6rem; } 
+        .footer-icon span { font-size: 0.7rem; } 
+        main { padding: 80px 20px 100px; }
+        .role-indicator { display: none; }
+        .header-btn { width: 38px; height: 38px; font-size: 1rem; }
+    }
+    @media (min-width: 1024px) { 
+        main { max-width: 1200px; margin: 0 auto; } 
+    }
+    
+    /* --- ESTILOS PARA ADMIN Y DASHBOARD --- */
+    .table-wrapper { margin-bottom: 40px; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 24px; position: relative; overflow: visible; }
+    .table-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .table-header h2 { margin: 0; color: var(--primary); font-size: 1.4rem; }
+    .filter-container { background: var(--background); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .filter-input { flex: 1 1 36px; padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 0.95rem; transition: var(--transition-fast); }
+    .filter-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(139, 30, 63, 0.1); }
+    .filter-select { padding: 10px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); background: white; font-size: 0.95rem; min-width: 150px; }
+    .filter-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; transition: var(--transition-normal); display: flex; align-items: center; gap: 8px; }
+    .filter-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .filter-btn.reset { background: var(--text-light); }
+    .filter-btn.reset:hover { background: #555; }
+    .pagination-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+    .pagination-info { color: var(--text-light); font-size: 0.9rem; }
+    .pagination-buttons { display: flex; gap: 8px; align-items: center; }
+    .page-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition-fast); font-weight: 500; }
+    .page-btn:hover { background: var(--background); border-color: var(--primary); }
+    .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .rows-per-page { display: flex; align-items: center; gap: 8px; }
+    .rows-per-page select { padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-md); background: white; }
+    .filter-badge { display: inline-block; background: var(--accent); color: var(--primary-dark); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-left: 12px; }
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background-color: var(--surface); border-radius: var(--radius-md); overflow: hidden; }
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background-color: var(--primary); color: white; font-weight: 600; position: relative; cursor: pointer; user-select: none; transition: var(--transition-fast); }
+    th:hover { background-color: var(--primary-dark); }
+    tr:hover { background-color: rgba(139, 30, 63, 0.05); }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 24px; }
+    .dashboard-card { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 24px; border: 1px solid var(--border); transition: var(--transition-normal); }
+    .dashboard-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+    .dashboard-card h3 { color: var(--primary); font-size: 1.2rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 12px; }
+    .chart-container { position: relative; height: 300px; width: 100%; margin-bottom: 16px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
+    .stat-item { background: linear-gradient(135deg, var(--surface) 0%, #F9F9F9 100%); padding: 24px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border); transition: var(--transition-normal); position: relative; overflow: hidden; }
+    .stat-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .stat-item::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: linear-gradient(to bottom, var(--primary), var(--accent)); }
+    .stat-number { font-size: 2.8rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; line-height: 1; }
+    .stat-title { font-size: 1rem; color: var(--text-light); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-trend { font-size: 0.9rem; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--success); display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .trend-down { color: var(--error); }
+    .dashboard-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid var(--border); padding-bottom: 12px; }
+    .dashboard-tab { padding: 10px 24px; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-weight: 600; transition: var(--transition-fast); }
+    .dashboard-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .dashboard-tab:hover { background: var(--primary-light); color: white; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-mini { background: var(--surface); padding: 16px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); }
+    .kpi-mini .value { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+    .kpi-mini .label { font-size: 0.8rem; color: var(--text-light); text-transform: uppercase; }
+    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .chart-container { height: 250px; } .filter-container { flex-direction: column; align-items: stretch; } .pagination-controls { flex-direction: column; align-items: stretch; } }
+    
+    /* --- RESTO DE ESTILOS EXISTENTES --- */
+    .delete-all-btn { background: linear-gradient(135deg, var(--error) 0%, #C0392B 100%); color: white; padding: 12px 24px; border: none; border-radius: var(--radius-md); cursor: pointer; margin-bottom: 24px; font-weight: 600; transition: var(--transition-normal); box-shadow: var(--shadow-sm); }
+    .delete-all-btn:hover { background: linear-gradient(135deg, #C0392B 0%, #A93226 100%); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .logout-btn { background: linear-gradient(135deg, var(--secondary) 0%, #1E8449 100%); color: white; padding: 12px 24px; border: none; border-radius: var(--radius-md); cursor: pointer; margin-top: 20px; font-weight: 600; transition: var(--transition-normal); box-shadow: var(--shadow-sm); }
+    .logout-btn:hover { background: linear-gradient(135deg, #1E8449 0%, #145A32 100%); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-right: 10px; color: var(--primary); transition: var(--transition-fast); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+    .action-btn:hover { color: var(--primary-dark); background: var(--background); }
+    .establecimientos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .est-card { background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); transition: all var(--transition-normal); display: flex; flex-direction: column; border: 1px solid var(--border); }
+    .est-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .est-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 20px; position: relative; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+    .est-type-badge { position: absolute; top: 16px; right: 16px; background-color: var(--accent); color: var(--primary-dark); padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; box-shadow: var(--shadow-sm); }
+    .est-body { padding: 20px; flex: 1; text-align: left; }
+    .est-body h3 { margin-bottom: 12px; font-size: 1.3rem; color: var(--text); font-weight: 700; }
+    .est-body p { font-size: 0.95rem; color: var(--text-light); margin-bottom: 10px; margin-left: 0; }
+    .mi-establecimiento-form { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 500px; margin: 0 auto; border: 1px solid var(--border); }
+    .est-panel { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 800px; margin: 0 auto; border: 1px solid var(--border); }
+    .est-controls { display: flex; justify-content: center; gap: 20px; margin-top: 24px; flex-wrap: wrap; }
+    .scan-btn { background: linear-gradient(135deg, var(--info) 0%, #2980b9 100%); color: white; padding: 16px 32px; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: var(--shadow-md); transition: var(--transition-normal); display: flex; align-items: center; gap: 10px; }
+    .scan-btn:hover { background: linear-gradient(135deg, #2980b9 0%, #1F618D 100%); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .est-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin: 32px 0; }
+    .stat-card { background: linear-gradient(135deg, var(--surface) 0%, #F9F9F9 100%); padding: 24px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border); transition: var(--transition-normal); }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+    .stat-label { font-size: 1rem; color: var(--text-light); }
+    .sellos-received-list { max-height: 300px; overflow-y: auto; margin-top: 20px; background: var(--background); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border); }
+    .premio-section { background: linear-gradient(135deg, #d4edda 0%, #C8E6C9 100%); color: #155724; padding: 24px; border-radius: var(--radius-lg); margin: 24px auto; max-width: 600px; border-left: 6px solid var(--success); }
+    .admin-login-form { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); max-width: 400px; margin: 0 auto; border: 1px solid var(--border); }
+    #search-container { position: sticky; bottom: 5px; background: var(--surface); padding: 8px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); z-index: 100; margin-top: 8px; display: flex; align-items: center; border: 1px solid var(--border); }
+    #search-input { width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: var(--radius-md); font-size: 1rem; margin-right: 12px; transition: var(--transition-fast); }
+    #search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139, 30, 63, 0.1); outline: none; }
+    #search-icon { color: var(--primary); font-size: 1.3rem; cursor: pointer; padding: 12px; border-radius: var(--radius-md); transition: var(--transition-fast); }
+    #search-icon:hover { background: var(--background); }
+    .recaptcha-box { background: #f9f9f9; border: 1px solid #d3d3d3; border-radius: 3px; width: 100%; max-width: 304px; height: 78px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; margin: 20px auto; box-shadow: 0 0 4px 1px rgba(0,0,0,0.08); user-select: none; position: relative; }
+    .recaptcha-left { display: flex; align-items: center; gap: 12px; }
+    .recaptcha-checkbox { width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px; background: #fff; cursor: pointer; appearance: none; -webkit-appearance: none; position: relative; transition: all 0.2s; outline: none; }
+    .recaptcha-checkbox:hover { border-color: #b2b2b2; }
+    .recaptcha-checkbox:checked { border-color: transparent; background: transparent; }
+    .recaptcha-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 10px; height: 16px; border: solid #0F9D58; border-width: 0 4px 4px 0; transform: rotate(45deg); animation: checkAnim 0.2s ease forwards; }
+    @keyframes checkAnim { from { opacity: 0; transform: rotate(45deg) scale(0.5); } to { opacity: 1; transform: rotate(45deg) scale(1); } }
+    .recaptcha-label { font-family: Roboto, helvetica, arial, sans-serif; font-size: 14px; font-weight: 400; color: #000; cursor: pointer; }
+    .recaptcha-right { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: 10px; }
+    .recaptcha-logo { width: 32px; height: 32px; margin-bottom: 2px; opacity: 0.7; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48px' height='48px'%3E%3Cpath fill='%234285F4' d='M24 30.1c-3.4 0-6.1-2.7-6.1-6.1 0-3.4 2.7-6.1 6.1-6.1s6.1 2.7 6.1 6.1C30.1 27.4 27.4 30.1 24 30.1zM24 19.9c-2.3 0-4.1 1.8-4.1 4.1s1.8 4.1 4.1 4.1 4.1-1.8 4.1-4.1S26.3 19.9 24 19.9z'/%3E%3Cpath fill='%234285F4' d='M43.8 24c0 10.9-8.9 19.8-19.8 19.8 -3.1 0-6-0.7-8.7-2l1.6-2.8c2.1 1 4.5 1.6 7.1 1.6 9.2 0 16.6-7.4 16.6-16.6 0-2.8-0.7-5.4-1.9-7.7l2.8-1.6C42.9 17.6 43.8 20.7 43.8 24z'/%3E%3Cpath fill='%234285F4' d='M22.5 4.3L19.7 9.1C15.9 8 11.8 8.4 8.2 10.5L9.8 13.3C12.7 11.6 16.1 11.2 19.3 12.3L16.5 17.1 29.5 17.1 29.5 4.3z'/%3E%3Cpath fill='%234285F4' d='M4.2 24c0-4.8 1.7-9.3 4.6-12.8L6.2 9C2.7 13.1 0.6 18.3 0.6 24c0 2.2 0.3 4.3 0.9 6.3l3-1C4.3 27.4 4.2 25.7 4.2 24z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; background-size: contain; transition: opacity 0.3s; }
+    .recaptcha-box:hover .recaptcha-logo { opacity: 1; }
+    .recaptcha-text { font-size: 10px; color: #555; text-align: center; line-height: 1.2; }
+    .recaptcha-text a { color: #555; text-decoration: none; }
+    .recaptcha-text a:hover { text-decoration: underline; }
+    .checkbox-group { display: flex; align-items: flex-start; margin-top: 16px; gap: 12px; }
+    .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+    .checkbox-group label { margin-top: 0; font-weight: 500; font-size: 0.95rem; cursor: pointer; line-height: 1.4; }
+    .checkbox-group label a { color: var(--primary); text-decoration: underline; }
+    #scanner-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; }
+    #camera-window { position: relative; width: calc(100vw - 40px); height: calc(100vw - 40px); max-width: 400px; max-height: 400px; background-color: #000; overflow: hidden; border-radius: var(--radius-lg); border: 3px solid rgba(255, 255, 255, 0.2); transition: all var(--transition-normal); box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
+    #camera-window.detected { border: 4px solid var(--scanner-accent-green) !important; box-shadow: 0 0 30px rgba(46, 204, 113, 0.4); }
+    #camera-window canvas { width: 100%; height: 100%; object-fit: cover; }
+    #qr-result-label { color: white; margin-top: 24px; font-size: 1.1rem; min-height: 1.5em; padding: 0 20px; word-break: break-all; text-align: center; background: rgba(255, 255, 255, 0.1); padding: 12px 20px; border-radius: var(--radius-md); backdrop-filter: blur(10px); }
+    #btn-sellar-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--scanner-success-color) 0%, #219653 100%); color: white; border: 4px solid white; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: none; box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4); animation: popIn 0.3s ease-out; z-index: 10; text-align: center; line-height: 92px; transition: all var(--transition-normal); }
+    #btn-sellar-overlay:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 12px 35px rgba(39, 174, 96, 0.6); }
+    @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0); } 80% { transform: translate(-50%, -50%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(1); } }
+    #scanner-success-msg { display: none; color: white; background: linear-gradient(135deg, var(--scanner-success-color) 0%, #219653 100%); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); font-size: 1.3rem; font-weight: 600; max-width: 80%; text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5001; animation: slideIn 0.4s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    
+    /* --- ESTILOS LANDING --- */
+    #inicio .landing-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; text-align: center; padding: 5rem 1.5rem 4rem; position: relative; overflow: hidden; margin: -80px -20px 0 -20px; width: calc(100% + 40px); }
+    #inicio .landing-header::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&q=80&w=2000') center/cover; opacity: 0.18; mix-blend-mode: overlay; }
+    #inicio .landing-header h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); font-weight: 800; margin-bottom: 0.8rem; text-shadow: 0 3px 12px rgba(0,0,0,0.4); color: white; }
+    #inicio .subtitle { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 500; opacity: 0.95; max-width: 720px; margin: 0 auto 2rem; color: white; line-height: 1.4; }
+    #inicio .landing-section { padding: 3rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    #inicio .landing-section h2 { color: var(--primary); font-size: clamp(1.8rem, 4vw, 2.4rem); text-align: center; margin-bottom: 2.5rem; position: relative; }
+    #inicio .landing-section h2::after { content: ''; width: 80px; height: 4px; background: var(--accent); position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); border-radius: 2px; }
+    #inicio .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+    #inicio .step-card { background: var(--surface); border-radius: var(--radius-lg); padding: 2rem 1.8rem; box-shadow: var(--shadow-md); text-align: left; transition: transform 0.3s ease, box-shadow 0.3s ease; border-top: 6px solid var(--primary); display: flex; flex-direction: column; height: 100%; }
+    #inicio .step-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-lg); }
+    #inicio .step-number { width: 48px; height: 48px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 1.2rem; }
+    #inicio .step-card h3 { font-size: 1.3rem; margin-bottom: 0.8rem; color: var(--text); font-weight: 700; }
+    #inicio .step-card p { font-size: 1rem; color: var(--text-light); margin: 0; line-height: 1.6; }
+    #inicio .step-card i { font-size: 2rem; color: var(--primary); margin-bottom: 1rem; }
+    #inicio .premios-block { background: linear-gradient(135deg, #fef9e7 0%, #fff9e6 100%); border-radius: var(--radius-lg); padding: 2.5rem; margin: 2.5rem auto; max-width: 900px; border-left: 8px solid var(--accent); box-shadow: var(--shadow-md); }
+    #inicio .premios-block h3 { color: var(--primary-dark); font-size: 1.8rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; }
+    #inicio .premios-block h3 i { color: var(--accent); font-size: 2.2rem; }
+    #inicio .premios-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem; }
+    @media (max-width: 640px) { #inicio .premios-list { grid-template-columns: 1fr; gap: 1.5rem; } }
+    #inicio .premio-item { background: white; padding: 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-bottom: 4px solid var(--success); }
+    #inicio .premio-item h4 { color: var(--success); font-size: 1.3rem; margin-bottom: 0.8rem; }
+    #inicio .premio-sorteo { background: linear-gradient(135deg, #fff4e5 0%, #ffead4 100%); padding: 1.8rem; border-radius: var(--radius-md); margin-top: 2rem; border-bottom: 4px solid var(--warning); }
+    #inicio .premio-sorteo h4 { color: #e67e22; font-size: 1.4rem; margin-bottom: 0.8rem; }
+    #inicio .cta-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; margin: 2.5rem 0 1rem; }
+    #inicio .cta-group .cta-button { margin: 0; padding: 1rem 2rem; font-size: 1.1rem; }
+    #inicio .cta-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); }
+    #inicio .cta-secondary { background: linear-gradient(135deg, var(--secondary) 0%, #1e4a22 100%); }
+    #inicio .establecimientos-link { text-align: center; margin: 2rem 0; padding: 1.5rem; background: rgba(139, 30, 63, 0.03); border-radius: var(--radius-lg); }
+    #inicio .establecimientos-link .btn-link { background: none; border: 2px solid var(--primary); color: var(--primary); padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+    #inicio .establecimientos-link .btn-link:hover { background: var(--primary); color: white; }
+    
+    /* --- ESTILOS MI PASAPORTE --- */
+    .sellos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0 32px; justify-content: center; }
+    .sello-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .sello-icon { width: 80px; height: 80px; border-radius: 50%; background-color: var(--sello-gris); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: var(--shadow-sm); border: 2px solid var(--border); }
+    .sello-icon.active { background: linear-gradient(135deg, var(--sello-bodega), #6A1530); border: 2px solid var(--accent); box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.3); transform: scale(1.05); }
+    .sello-icon i { font-size: 2.5rem; color: rgba(255, 255, 255, 0.9); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .sello-label { font-size: 0.9rem; font-weight: 600; color: var(--text-light); margin-top: 4px; }
+    .sello-label.active { color: var(--primary); font-weight: 700; }
+    .sello-nombre { font-size: 0.8rem; color: var(--text-light); max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .historial-sellos { margin-top: 32px; border-top: 2px solid var(--border); padding-top: 24px; }
+    .historial-sellos h3 { color: var(--primary); font-size: 1.4rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .historial-lista { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 8px; max-height: 350px; overflow-y: auto; }
+    .historial-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    .historial-item:hover { background: rgba(139, 30, 63, 0.03); }
+    .historial-icon { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; margin-right: 16px; flex-shrink: 0; }
+    .historial-icon i { font-size: 1.4rem; color: white; }
+    .historial-info { flex: 1; }
+    .historial-nombre { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .historial-fecha { font-size: 0.8rem; color: var(--text-light); }
+    .historial-tipo { display: inline-block; padding: 4px 12px; background: var(--accent-light); border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: var(--primary-dark); margin-left: 12px; }
+    #pasaporte-info { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+    #pasaporte-qr { margin: 24px 0; padding: 16px; background: white; border-radius: var(--radius-md); display: inline-block; }
+    @media (max-width: 480px) { .sellos-grid { gap: 8px; } .sello-icon { width: 70px; height: 70px; } .sello-icon i { font-size: 2rem; } }
+
+    /* --- ESTILOS PARA TÉRMINOS Y CONDICIONES --- */
+    .terminos-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 32px;
+        border: 1px solid var(--border);
+    }
+    
+    .terminos-header {
+        text-align: center;
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 2px solid var(--accent);
+    }
+    
+    .terminos-header h1 {
+        color: var(--primary);
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+    
+    .terminos-header h1::after {
+        content: '';
+        display: block;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        margin: 12px auto 0;
+        border-radius: 2px;
+    }
+    
+    .terminos-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+    
+    @media (max-width: 768px) {
+        .terminos-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+    }
+    
+    .terminos-seccion {
+        background: var(--background);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        border: 1px solid var(--border);
+        transition: var(--transition-normal);
+        height: fit-content;
+    }
+    
+    .terminos-seccion:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    .terminos-seccion h2 {
+        color: var(--primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 16px;
+    }
+    
+    .terminos-seccion h2 i {
+        color: var(--accent);
+        font-size: 1.6rem;
+    }
+    
+    .terminos-seccion h3 {
+        color: var(--secondary);
+        font-size: 1.2rem;
+        margin: 24px 0 12px;
+        font-weight: 600;
+    }
+    
+    .terminos-seccion h3:first-of-type {
+        margin-top: 0;
+    }
+    
+    .terminos-seccion p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--text);
+        margin-bottom: 16px;
+    }
+    
+    .terminos-seccion ul, .terminos-seccion ol {
+        padding-left: 24px;
+        margin: 16px 0;
+    }
+    
+    .terminos-seccion li {
+        margin-bottom: 12px;
+        line-height: 1.5;
+        color: var(--text-light);
+    }
+    
+    .terminos-seccion strong {
+        color: var(--primary);
+    }
+    
+    .terminos-premio {
+        background: linear-gradient(135deg, #fef9e7 0%, #fff9e6 100%);
+        border-left: 6px solid var(--success);
+        padding: 20px;
+        border-radius: var(--radius-md);
+        margin: 24px 0;
+    }
+    
+    .terminos-premio h4 {
+        color: var(--success);
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .terminos-sorteo {
+        background: linear-gradient(135deg, #fff4e5 0%, #ffead4 100%);
+        border-left: 6px solid var(--warning);
+        padding: 20px;
+        border-radius: var(--radius-md);
+        margin: 24px 0;
+    }
+    
+    .terminos-sorteo h4 {
+        color: #e67e22;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .terminos-footer {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    
+    .terminos-footer .btn-terminos {
+        padding: 14px 32px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-normal);
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .btn-secondary {
+        background: var(--background);
+        color: var(--text);
+        border: 2px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--surface);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+    
+    .info-box {
+        background: rgba(52, 152, 219, 0.05);
+        border-left: 4px solid var(--info);
+        padding: 16px;
+        border-radius: var(--radius-md);
+        margin: 20px 0;
+        font-size: 0.95rem;
+    }
+    
+    .info-box i {
+        color: var(--info);
+        margin-right: 8px;
+    }
+    
+    .fecha-destacada {
+        display: inline-block;
+        background: var(--primary);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* --- ESTILOS PARA REGISTRO CON DIRECCIÓN Y CP --- */
+    .direccion-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+        margin-top: 4px;
+    }
+    
+    @media (max-width: 480px) {
+        .direccion-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+    }
+    
+    .notificaciones-box {
+        background: rgba(52, 152, 219, 0.05);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin: 24px 0 16px;
+        border: 1px solid rgba(52, 152, 219, 0.2);
+        transition: var(--transition-normal);
+    }
+    
+    .notificaciones-box:hover {
+        background: rgba(52, 152, 219, 0.08);
+        border-color: var(--info);
+    }
+    
+    .notificaciones-box .checkbox-group {
+        margin-top: 0;
+        align-items: center;
+    }
+    
+    .notificaciones-box .checkbox-group input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .notificaciones-box .checkbox-group label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+    
+    .notificaciones-info {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-left: 34px;
+        margin-top: 8px;
+        padding-left: 8px;
+        border-left: 2px solid var(--info);
+    }
+    
+    .campo-obligatorio::after {
+        content: '*';
+        color: var(--error);
+        margin-left: 4px;
+        font-weight: bold;
+    }
+    
+    .badge-nuevo {
+        display: inline-block;
+        background: var(--success);
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* --- ESTILOS PWA - BOTÓN FLOTANTE Y MODAL --- */
+    .pwa-fab {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border: 2px solid var(--accent);
+        box-shadow: 0 4px 20px rgba(139, 30, 63, 0.5);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 2001;
+        border: none;
+        outline: none;
+    }
+
+    .pwa-fab:hover {
+        transform: scale(1.1) rotate(15deg);
+        box-shadow: 0 6px 25px rgba(139, 30, 63, 0.7);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #4A0F20 100%);
+    }
+
+    .pwa-fab i {
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .pwa-fab.installed {
+        background: linear-gradient(135deg, var(--secondary) 0%, #1E3A28 100%);
+        border-color: var(--success);
+    }
+
+    .pwa-fab.hidden {
+        display: none;
+    }
+
+    /* Overlay del modal */
+    .pwa-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        z-index: 3000;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .pwa-modal-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    /* Modal de instalación */
+    .pwa-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 90%;
+        max-width: 450px;
+        background: rgba(139, 30, 63, 0.98);
+        backdrop-filter: blur(10px);
+        border: 2px solid var(--accent);
+        border-radius: var(--radius-lg);
+        padding: 30px 25px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        z-index: 3001;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: white;
+    }
+
+    .pwa-modal-overlay.show .pwa-modal {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .pwa-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .pwa-modal-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .pwa-modal-title i {
+        color: var(--accent);
+        font-size: 2rem;
+    }
+
+    .pwa-modal-close {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.3rem;
+        transition: all 0.3s;
+    }
+
+    .pwa-modal-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    .pwa-modal-content {
+        margin-bottom: 25px;
+    }
+
+    .pwa-modal-content p {
+        color: #eee;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+
+    .pwa-features {
+        list-style: none;
+        margin: 20px 0;
+    }
+
+    .pwa-features li {
+        padding: 10px 0;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .pwa-features li i {
+        color: var(--accent);
+        font-size: 1.1rem;
+        width: 20px;
+    }
+
+    .pwa-install-btn {
+        background: linear-gradient(135deg, #8B1E3F 0%, #6A1530 100%);
+        color: white;
+        border: 2px solid var(--accent);
+        padding: 16px 25px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .pwa-install-btn:hover {
+        background: linear-gradient(135deg, #6A1530 0%, #4A0F20 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+    }
+
+    .pwa-install-btn:disabled {
+        background: #555;
+        border-color: #777;
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.7;
+    }
+
+    .pwa-install-btn i {
+        font-size: 1.3rem;
+    }
+
+    /* Partículas decorativas */
+    .pwa-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .pwa-particle {
+        position: absolute;
+        background: rgba(255, 209, 102, 0.2);
+        border-radius: 50%;
+        animation: float 20s infinite linear;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0) translateX(0) rotate(0deg); }
+        100% { transform: translateY(-1000px) translateX(500px) rotate(720deg); }
+    }
+
+    @media (max-width: 768px) {
+        .pwa-fab {
+            bottom: 90px;
+            width: 55px;
+            height: 55px;
+            font-size: 1.6rem;
+        }
+        .pwa-modal {
+            width: 95%;
+            padding: 25px 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .pwa-fab {
+            bottom: 80px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+        }
+    }
+    
+    /* --- NUEVO: MODAL DE SELECCIÓN DE PERFIL --- */
+    .profile-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 2500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    }
+    .profile-modal-overlay.active { display: flex; }
+    
+    .profile-modal {
+        width: 90%;
+        max-width: 420px;
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        animation: modalSlideUp 0.4s ease;
+    }
+    
+    @keyframes modalSlideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .profile-modal-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 24px;
+        text-align: center;
+        position: relative;
+    }
+    
+    .profile-modal-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .profile-modal-header p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    
+    .profile-modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+    
+    .profile-modal-close:hover {
+        background: rgba(255,255,255,0.3);
+        transform: rotate(90deg);
+    }
+    
+    .profile-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 24px;
+    }
+    
+    .profile-option {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--background);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        border: 2px solid transparent;
+    }
+    
+    .profile-option:hover {
+        background: var(--surface);
+        border-color: var(--primary);
+        transform: translateX(8px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .profile-option-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .profile-option-icon.pasaporte {
+        background: linear-gradient(135deg, var(--accent) 0%, #E5B84D 100%);
+        color: var(--primary-dark);
+    }
+    
+    .profile-option-icon.establecimiento {
+        background: linear-gradient(135deg, var(--secondary) 0%, #1E4A22 100%);
+    }
+    
+    .profile-option-icon.admin {
+        background: linear-gradient(135deg, #9B59B6 0%, #6C3483 100%);
+    }
+    
+    .profile-option-content h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+    }
+    
+    .profile-option-content p {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin: 0;
+    }
+    
+    .profile-option-arrow {
+        margin-left: auto;
+        color: var(--text-light);
+        font-size: 1rem;
+        transition: var(--transition-fast);
+    }
+    
+    .profile-option:hover .profile-option-arrow {
+        color: var(--primary);
+        transform: translateX(4px);
+    }
+    
+    .profile-modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+    }
+    
+    .profile-modal-footer a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition-fast);
+    }
+    
+    .profile-modal-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Estado "logueado" en las opciones */
+    .profile-option.logged-in {
+        background: linear-gradient(135deg, rgba(39, 174, 96, 0.1) 0%, rgba(46, 204, 113, 0.05) 100%);
+        border-color: var(--success);
+    }
+    
+    .profile-option.logged-in .profile-option-content h3 {
+        color: var(--success);
+    }
+    
+    .profile-option.logged-in .profile-option-content h3::after {
+        content: ' ✓';
+    }
+    
+    /* Logout option en el modal */
+    .profile-option.logout {
+        background: rgba(231, 76, 60, 0.05);
+        border-color: transparent;
+    }
+    
+    .profile-option.logout:hover {
+        background: rgba(231, 76, 60, 0.1);
+        border-color: var(--error);
+    }
+    
+    .profile-option.logout .profile-option-icon {
+        background: var(--error);
+    }
+    
+    .profile-option.logout .profile-option-content h3 {
+        color: var(--error);
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="header-left">
+        <div class="logo" onclick="navigateTo('inicio')">
+            <i class="fas fa-wine-bottle"></i> Pasaporte Turístico del Vino
+        </div>
+    </div>
+    <div class="header-right">
+        <div id="role-indicator-header" class="role-indicator" style="display: none;">
+            <i class="fas fa-user-check"></i>
+            <span id="role-indicator-text"></span>
+        </div>
+        <button class="header-btn register-btn" id="header-register-btn" onclick="navigateTo('registrar')" title="Registrar Pasaporte">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button class="header-btn user-btn" id="header-user-btn" onclick="openProfileModal()" title="Iniciar Sesión">
+            <i class="fas fa-user"></i>
+        </button>
+        <div class="menu-icon" id="menu-icon">
+            <i class="fas fa-ellipsis-v"></i>
+        </div>
+    </div>
+</header>
+
+<div id="menu">
+    <div class="menu-header">
+        <h3 id="menu-title">Menú</h3>
+        <p id="menu-subtitle">Opciones disponibles</p>
+    </div>
+    <div class="close">&times;</div>
+    <ul id="menu-items"></ul>
+</div>
+
+<div id="overlay"></div>
+
+<!-- ========== NUEVO: MODAL DE SELECCIÓN DE PERFIL ========== -->
+<div class="profile-modal-overlay" id="profile-modal-overlay" onclick="closeProfileModal(event)">
+    <div class="profile-modal" onclick="event.stopPropagation()">
+        <div class="profile-modal-header">
+            <button class="profile-modal-close" onclick="closeProfileModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>Accede a tu cuenta</h2>
+            <p>Selecciona el tipo de acceso</p>
+        </div>
+        
+        <div class="profile-options" id="profile-options">
+            <!-- Se generará dinámicamente según el estado de login -->
+        </div>
+        
+        <div class="profile-modal-footer">
+            <a href="#" onclick="event.preventDefault(); closeProfileModal(); navigateTo('terminos');">
+                <i class="fas fa-file-contract"></i> Términos y Condiciones
+            </a>
+        </div>
+    </div>
+</div>
+
+<main>
+<!-- ========== PÁGINA INICIO ========== -->
+<section id="inicio" class="page">
+    <div class="landing-header">
+        <h1>Pasaporte Turístico del Vino</h1>
+        <p class="subtitle">
+            Recorre las Rutas del Vino de Valladolid, colecciona experiencias y gana premios únicos
+        </p>
+        <div class="cta-group">
+            <button class="cta-button cta-primary" onclick="navigateTo('registrar')">
+                <i class="fas fa-passport"></i> Registra tu Pasaporte
+            </button>
+            <button class="cta-button cta-secondary" onclick="navigateTo('establecimientos')">
+                <i class="fas fa-store"></i> Ver Establecimientos
+            </button>
+        </div>
+    </div>
+    <div class="landing-section">
+        <h2>¿Cómo funciona?</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <i class="fas fa-passport"></i>
+                <h3>Regístra tu Pasaporte Turístico del Vino</h3>
+                <p>Obtén tu pasaporte digital en segundos. Recibirás un código QR personalizado para empezar tu colección.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <i class="fas fa-map-marked-alt"></i>
+                <h3>Visita los establecimientos adheridos</h3>
+                <p>Descubre bodegas, restaurantes, museos y alojamientos en las distintas Rutas del Vino de la Provincia de Valladolid. Comprueba localización y horarios en el listado de establecimientos.</p>
+                <p style="margin-top: 12px;"><small><i class="fas fa-filter"></i> Puedes filtrar por rutas y tipo de establecimiento</small></p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <i class="fas fa-stamp"></i>
+                <h3>Colecciona sellos</h3>
+                <p>Cada vez que visites un establecimiento, escanea tu QR y acumula un sello. ¡Cuantos más sellos, más premios!</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <i class="fas fa-gift"></i>
+                <h3>Recibe tus premios</h3>
+                <p>Al completar 4 experiencias distintas, te contactaremos para enviarte GRATIS un lote de productos "Alimentos de Valladolid".</p>
+            </div>
+        </div>
+        <div class="establecimientos-link">
+            <p><i class="fas fa-wine-glass-alt" style="color: var(--primary);"></i> ¿Buscas dónde sellar tu pasaporte?</p>
+            <button class="btn-link" onclick="navigateTo('establecimientos')">
+                Ver todos los establecimientos adheridos <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    <div class="landing-section">
+        <div class="premios-block">
+            <h3><i class="fas fa-trophy"></i> Premios y sorteos</h3>
+            <p style="font-size: 1.2rem; margin-bottom: 1.8rem;">Una vez completado el pasaporte con un <strong>mínimo de 4 experiencias distintas</strong> nos pondremos en contacto con usted para remitirle su PREMIO.</p>
+            <div class="premios-list">
+                <div class="premio-item">
+                    <h4><i class="fas fa-gift"></i> Lote de productos</h4>
+                    <p style="font-size: 1.1rem;"><strong>GRATIS</strong> un lote de productos de la marca</p>
+                    <p style="color: var(--primary); font-weight: 700; font-size: 1.3rem;">"Alimentos de Valladolid, a gusto de todos"</p>
+                    <p style="margin-top: 12px;">+ Descuentos en entradas para visitar los Centros Turísticos provinciales</p>
+                </div>
+                <div class="premio-item">
+                    <h4><i class="fas fa-ticket-alt"></i> Descuentos exclusivos</h4>
+                    <p>Accede a promociones especiales en:</p>
+                    <ul style="margin-top: 8px; padding-left: 20px;">
+                        <li>Museos provinciales</li>
+                        <li>Centros de interpretación</li>
+                        <li>Rutas guiadas</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="premio-sorteo">
+                <h4><i class="fas fa-glass-cheers"></i> Sorteo de experiencias TOP</h4>
+                <p style="font-size: 1.2rem;">Con todo tu Pasaporte turístico del Vino sellado con al menos 4 sellos <strong>antes del 30 de diciembre de 2027</strong>, participarás en el sorteo de:</p>
+                <p style="font-size: 1.4rem; font-weight: 800; color: #e67e22; margin: 16px 0;">
+                    4 experiencias de enoturismo para dos personas
+                </p>
+                <p>en las Rutas del Vino de la Provincia de Valladolid. ¡Sorteo en enero 2027!</p>
+            </div>
+            <div style="text-align: center; margin-top: 32px;">
+                <button class="cta-button" onclick="navigateTo('registrar')" style="display: inline-block; margin: 0;">
+                    <i class="fas fa-passport"></i> ¡Quiero mi Pasaporte!
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== PÁGINA TÉRMINOS Y CONDICIONES ========== -->
+<section id="terminos" class="page">
+    <div class="terminos-container">
+        <div class="terminos-header">
+            <h1>Términos y Condiciones</h1>
+            <p style="color: var(--text-light); font-size: 1.1rem; margin-top: 16px;">
+                Información legal y protección de datos del Pasaporte Turístico del Vino
+            </p>
+        </div>
+        
+        <div class="terminos-grid">
+            <div class="terminos-seccion">
+                <h2><i class="fas fa-file-contract"></i> Términos y Condiciones</h2>
+                
+                <p style="font-weight: 600; color: var(--primary); margin-bottom: 20px;">
+                    Para registrar un PASAPORTE TURÍSTICO DEL VINO debe cumplimentar los datos personales, y marcar la aceptación de Términos y condiciones, política de privacidad y protección de datos.
+                </p>
+                
+                <div class="terminos-premio">
+                    <h4><i class="fas fa-gift"></i> Premio garantizado</h4>
+                    <p style="margin-bottom: 0;">Recibirá <strong>GRATIS un lote de productos de la marca "Alimentos de Valladolid, a gusto de todos"</strong> y descuentos en tus entradas para visitar los Centros Turísticos provinciales.</p>
+                </div>
+                
+                <h3><i class="fas fa-check-circle" style="color: var(--success);"></i> Verificación y validez</h3>
+                <ul>
+                    <li>Se verificará que el pasaporte se presenta de forma correcta y que, en el caso de participar más de una vez en la promoción, los sellos de los establecimientos visitados <strong>no deben ser coincidentes con los anteriores</strong>.</li>
+                    <li>En caso de participar con más de un pasaporte del mismo titular, éste optará a <strong>un único premio TOP para dos personas</strong>.</li>
+                    <li>Sólo se admitirán pasaportes que correspondan a <strong>personas mayores de edad</strong>.</li>
+                </ul>
+                
+                <h3><i class="fas fa-shield-alt" style="color: var(--info);"></i> Control de sellos</h3>
+                <ul>
+                    <li>En el momento del sorteo también se verificará que los sellos se corresponden con los establecimientos, actividades o experiencias que forman parte de esta iniciativa.</li>
+                    <li><strong>En caso de que alguno de los sellos no se corresponda, se declarará nulo el pasaporte y no tendrá derecho a ninguno de los premios.</strong></li>
+                    <li>Los sellos han de ser <strong>todos diferentes</strong> y corresponder a los colaboradores o establecimientos de las distintas rutas del vino.</li>
+                </ul>
+                
+                <h3><i class="fas fa-trophy"></i> Sorteo de experiencias TOP</h3>
+                <div class="terminos-sorteo">
+                    <h4><i class="fas fa-glass-cheers"></i> 4 experiencias para dos personas</h4>
+                    <p>Los participantes premiados se determinarán mediante <strong>sorteo en el mes de enero de 2027</strong>. Se extraerán un total de <strong>4 pasaportes con premio</strong> de una experiencia TOP para dos personas en las Rutas del Vino de la provincia.</p>
+                </div>
+                
+                <div style="background: rgba(139, 30, 63, 0.05); padding: 16px; border-radius: var(--radius-md); margin-top: 20px;">
+                    <p style="margin-bottom: 0; display: flex; align-items: center; gap: 12px;">
+                        <span class="fecha-destacada"><i class="fas fa-calendar-alt"></i> 30 DIC 2027</span>
+                        <span style="color: var(--text); font-weight: 600;">La campaña finalizará el 30 de diciembre de 2027</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="terminos-seccion">
+                <h2><i class="fas fa-shield-alt"></i> Política de Privacidad y Protección de Datos</h2>
+                
+                <p>La <strong>Diputación Provincial de Valladolid (DPV)</strong> será responsable del tratamiento de los datos introducidos en este formulario y será también quien deberá adoptar las medidas de seguridad técnicas y organizativas necesarias para su protección, según el riesgo que impliquen los tratamientos que se lleven a cabo en relación a los datos recabados, conforme indica el <strong>Real Decreto 3/2010, de 8 de enero</strong>, por el que se regula el Esquema Nacional de Seguridad en el ámbito de la Administración Electrónica.</p>
+                
+                <p>Los datos de carácter personal que se pudieran recabar directamente del interesado serán tratados de forma confidencial y quedarán incorporados a la correspondiente actividad de tratamiento titularidad del <strong>Patronato de Turismo de la DPV</strong>.</p>
+                
+                <div class="info-box">
+                    <i class="fas fa-globe"></i> La relación actualizada de las actividades de tratamiento que el Patronato de Turismo de la DPV lleva a cabo se encuentra disponible en: 
+                    <a href="#" style="color: var(--primary); font-weight: 600; text-decoration: underline;">www.sede.diputaciondevalladolid.es/registro-de-actividades</a>
+                </div>
+                
+                <h3 style="color: var(--primary);">Información básica sobre protección de datos</h3>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: var(--radius-md); overflow: hidden;">
+                    <tr style="background: rgba(139, 30, 63, 0.05);">
+                        <td style="padding: 12px; border: 1px solid var(--border); font-weight: 700; width: 30%;">Responsable</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">Diputación Provincial de Valladolid (a través del Patronato Provincial de Turismo)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid var(--border); font-weight: 700;">Base jurídica</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">El tratamiento es necesario para el cumplimiento de una misión realizada en interés público o en el ejercicio de poderes públicos conferidos al responsable del tratamiento. El interesado dio su consentimiento para el tratamiento de sus datos personales para uno o varios fines específicos.</td>
+                    </tr>
+                    <tr style="background: rgba(139, 30, 63, 0.05);">
+                        <td style="padding: 12px; border: 1px solid var(--border); font-weight: 700;">Finalidad</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">Promoción de actividades turísticas y noticias relacionadas, a través de diferentes medios, incluyendo páginas web, medios de comunicación, correo electrónico y redes sociales.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid var(--border); font-weight: 700;">Destinatarios</td>
+                        <td style="padding: 12px; border: 1px solid var(--border);">Personas jurídicas para el cumplimiento de los fines descritos, y en especial a prensa local y nacional, web y redes sociales de turismo de la provincia de Valladolid y Rutas del Vino certificadas.</td>
+                    </tr>
+                </table>
+                
+                <h3 style="color: var(--primary); margin-top: 24px;">Ejercicio de derechos</h3>
+                <div style="background: rgba(52, 152, 219, 0.08); padding: 20px; border-radius: var(--radius-md);">
+                    <p style="font-weight: 600; margin-bottom: 12px;">El ejercicio de los derechos de:</p>
+                    <ul style="columns: 2; column-gap: 20px;">
+                        <li>✓ Acceso</li>
+                        <li>✓ Rectificación</li>
+                        <li>✓ Supresión</li>
+                        <li>✓ Oposición</li>
+                        <li>✓ Limitación del tratamiento</li>
+                        <li>✓ Portabilidad</li>
+                    </ul>
+                    <p style="margin-top: 16px; margin-bottom: 8px;">Podrá ejercerse poniéndose en contacto con nosotros a través del buzón de correo electrónico:</p>
+                    <p style="background: var(--primary); color: white; padding: 12px; border-radius: var(--radius-md); text-align: center; font-weight: 700; letter-spacing: 1px; margin: 12px 0;">
+                        dpd@dipvalladolid.es
+                    </p>
+                    <p style="margin-bottom: 0; font-size: 0.95rem;">indicando la siguiente información:</p>
+                    <ul style="margin-top: 8px;">
+                        <li>Fotocopia del DNI (por las dos caras) del titular de los datos que ejercita su derecho.</li>
+                        <li>Tipo de derecho que desea ejercitar.</li>
+                        <li><strong>Tratamiento asociado:</strong> 'Patronato Provincial de Turismo'</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="terminos-footer">
+            <button class="btn-terminos btn-primary" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <button class="btn-terminos btn-secondary" onclick="navigateTo('registrar')">
+                <i class="fas fa-passport"></i> Registrarse ahora
+            </button>
+            <button class="btn-terminos btn-secondary" onclick="navigateTo('inicio')">
+                <i class="fas fa-home"></i> Ir al inicio
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ========== PÁGINA REGISTRAR ========== -->
+<section id="registrar" class="page">
+    <h1>Registrar pasaporte</h1>
+    <div id="registration-container">
+        <form id="register-form">
+            <label for="nombre" class="campo-obligatorio">Nombre Completo:</label>
+            <input type="text" id="nombre" required placeholder="Tu nombre">
+
+            <label for="email" class="campo-obligatorio">Email:</label>
+            <input type="email" id="email" required placeholder="ejemplo@email.com">
+            
+            <label for="password" class="campo-obligatorio">Contraseña:</label>
+            <div class="password-container">
+                <input type="password" id="password" required placeholder="Mínimo 6 caracteres">
+                <i class="fas fa-eye" id="toggle-password"></i>
+            </div>
+            
+            <label for="confirm-password" class="campo-obligatorio">Confirmar Contraseña:</label>
+            <div class="password-container">
+                <input type="password" id="confirm-password" required placeholder="Repite tu contraseña">
+                <i class="fas fa-eye" id="toggle-confirm-password"></i>
+            </div>
+            
+            <label for="tlf">Teléfono (opcional):</label>
+            <input type="tel" id="tlf" placeholder="+34 600 000 000">
+            
+            <label for="direccion" class="campo-obligatorio">Dirección:</label>
+            <div class="direccion-grid">
+                <input type="text" id="direccion" required placeholder="Calle, número, piso, ciudad...">
+                <input type="text" id="codigo_postal" required placeholder="C.P." maxlength="5" pattern="[0-9]{5}" title="Código postal de 5 dígitos">
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="condiciones-check" required checked>
+                <label for="condiciones-check">He leído y acepto las <a href="#" onclick="event.preventDefault(); navigateTo('terminos');">condiciones de registro y política de privacidad</a></label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="newsletter-check" checked>
+                <label for="newsletter-check">Suscripción Newsletter <span class="badge-nuevo">Ofertas</span></label>
+            </div>
+            
+            <div class="notificaciones-box">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="notificaciones-check" checked>
+                    <label for="notificaciones-check">
+                        <i class="fas fa-bell" style="color: var(--info);"></i> 
+                        Recibir notificaciones en este dispositivo
+                    </label>
+                </div>
+                <div class="notificaciones-info">
+                    <i class="fas fa-info-circle"></i> Te avisaremos cuando recibas un nuevo sello y cuando consigas tus 4 sellos. <strong>Requiere aceptar el permiso del navegador.</strong>
+                </div>
+            </div>
+            
+            <div class="recaptcha-box">
+                <div class="recaptcha-left">
+                    <input type="checkbox" id="recaptcha-registrar" class="recaptcha-checkbox" required>
+                    <label for="recaptcha-registrar" class="recaptcha-label">No soy un robot</label>
+                </div>
+                <div class="recaptcha-right">
+                    <div class="recaptcha-logo"></div>
+                    <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+                </div>
+            </div>
+            
+            <button type="submit">Crear Pasaporte</button>
+        </form>
+    </div>
+    <div id="error-message"></div>
+    <div id="success-message"></div>
+    <div id="qr-code"></div>
+    <div id="post-register-actions" style="display:none; margin-top: 20px;">
+        <button class="cta-button" onclick="navigateTo('mipasaporte')">Ir a Mi Pasaporte</button>
+    </div>
+</section>
+
+<!-- ========== PÁGINA MI PASAPORTE ========== -->
+<section id="mipasaporte" class="page">
+<h1>Mi pasaporte</h1>
+<form id="login-form" style="display: block;">
+<label for="login-email">Email:</label>
+<input type="email" id="login-email" required placeholder="ejemplo@email.com">
+<label for="login-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="login-password" required placeholder="Tu contraseña">
+<i class="fas fa-eye" id="toggle-login-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-login" class="recaptcha-checkbox" required>
+        <label for="recaptcha-login" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Iniciar Sesión</button>
+</form>
+<div id="login-error"></div>
+<div id="pasaporte-info" style="display: none;">
+    <p id="pasaporte-email" style="font-size: 1.2rem; margin-bottom: 8px;"></p>
+    <p id="pasaporte-nombre-display" style="color: var(--primary); font-weight: 600; margin-bottom: 16px;"></p>
+    <h3 style="margin-top: 24px; color: var(--primary);">Tus sellos</h3>
+    <div class="sellos-grid" id="sellos-visuales">
+        <div class="sello-item">
+            <div class="sello-icon" id="sello-1"><i class="fas fa-wine-bottle"></i></div>
+            <span class="sello-label" id="sello-label-1">Experiencia 1</span>
+            <span class="sello-nombre" id="sello-nombre-1"></span>
+        </div>
+        <div class="sello-item">
+            <div class="sello-icon" id="sello-2"><i class="fas fa-wine-bottle"></i></div>
+            <span class="sello-label" id="sello-label-2">Experiencia 2</span>
+            <span class="sello-nombre" id="sello-nombre-2"></span>
+        </div>
+        <div class="sello-item">
+            <div class="sello-icon" id="sello-3"><i class="fas fa-wine-bottle"></i></div>
+            <span class="sello-label" id="sello-label-3">Experiencia 3</span>
+            <span class="sello-nombre" id="sello-nombre-3"></span>
+        </div>
+        <div class="sello-item">
+            <div class="sello-icon" id="sello-4"><i class="fas fa-wine-bottle"></i></div>
+            <span class="sello-label" id="sello-label-4">Experiencia 4</span>
+            <span class="sello-nombre" id="sello-nombre-4"></span>
+        </div>
+    </div>
+    <div id="premio-section" style="display: none;"></div>
+    <div class="historial-sellos">
+        <h3><i class="fas fa-history"></i> Historial de sellos</h3>
+        <div id="sellos-historial-lista" class="historial-lista">
+            <p style="text-align: center; padding: 20px; color: var(--text-light);">Cargando historial...</p>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+        <div id="pasaporte-qr" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+    </div>
+    <button class="logout-btn" onclick="logoutPasaporte()">Cerrar Sesión</button>
+</div>
+</section>
+
+<section id="establecimientos" class="page">
+<h1>Nuestros Establecimientos</h1>
+<div class="establecimientos-grid" id="establecimientos-list"></div>
+<div id="search-container">
+<input type="text" id="search-input" placeholder="Buscar establecimiento...">
+<i class="fas fa-search" id="search-icon"></i>
+</div>
+</section>
+
+<section id="miestablecimiento" class="page">
+<h1>Mi Establecimiento</h1>
+<div id="mi-establecimiento-form-container">
+<form id="mi-establecimiento-login-form">
+<label for="mi-est-email">Email del Establecimiento:</label>
+<input type="email" id="mi-est-email" required placeholder="ejemplo@establecimiento.com">
+<label for="mi-est-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="mi-est-password" required placeholder="Contraseña del establecimiento">
+<i class="fas fa-eye" id="toggle-mi-est-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-est-login" class="recaptcha-checkbox" required>
+        <label for="recaptcha-est-login" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Iniciar Sesión</button>
+</form>
+</div>
+<div id="mi-establecimiento-panel" style="display: none; margin-top: 30px;">
+<div class="est-panel">
+<div id="est-info">
+<h2>Bienvenido, <span id="est-nombre-display"></span></h2>
+<div class="est-controls">
+    <button class="scan-btn" onclick="startScanningOverlay()"><i class="fas fa-qrcode"></i> Escanear QR</button>
+    <button class="logout-btn" onclick="logoutEstablecimiento()" style="margin-top:0;">Cerrar Sesión</button>
+</div>
+<div class="est-stats">
+<div class="stat-card">
+<div class="stat-value" id="sellos-count">0</div>
+<div class="stat-label">Sellos Recibidos</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="visitas-count">0</div>
+<div class="stat-label">Visitantes Diferentes</div>
+</div>
+</div>
+</div>
+<h3>Sellos Recibidos Recientes</h3>
+<div class="sellos-received-list" id="sellos-list"></div>
+</div>
+</div>
+</section>
+
+<section id="admin-login" class="page">
+<h1>Acceso Administrador</h1>
+<div>
+<form id="admin-login-form">
+<label for="admin-email">Email:</label>
+<input type="email" id="admin-email" value="admin@admin.com" required>
+<label for="admin-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="admin-password" value="admin" required>
+<i class="fas fa-eye" id="toggle-admin-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-admin" class="recaptcha-checkbox" required>
+        <label for="recaptcha-admin" class="recaptcha-label">No soy un robot</label>
+    </div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Acceder</button>
+</form>
+</div>
+<div id="admin-login-error"></div>
+</section>
+
+<!-- ========== PÁGINA ADMIN ========== -->
+<section id="admin" class="page">
+    <h1>Panel de Administración</h1>
+    
+    <div class="table-wrapper" id="pasaporte-table-wrapper">
+        <div class="table-header">
+            <h2><i class="fas fa-passport"></i> Pasaportes</h2>
+            <span class="filter-badge" id="pasaporte-count">Cargando...</span>
+        </div>
+        <div class="filter-container">
+            <input type="text" id="filter-pasaporte-email" class="filter-input" placeholder="Filtrar por email...">
+            <input type="text" id="filter-pasaporte-nombre" class="filter-input" placeholder="Filtrar por nombre...">
+            <select id="filter-pasaporte-sellos" class="filter-select">
+                <option value="">Todos los sellos</option>
+                <option value="0">Sin sellos</option>
+                <option value="1-3">1-3 sellos</option>
+                <option value="4+">4+ sellos (completos)</option>
+            </select>
+            <button class="filter-btn" onclick="applyPasaporteFilters()"><i class="fas fa-search"></i> Aplicar</button>
+            <button class="filter-btn reset" onclick="resetPasaporteFilters()"><i class="fas fa-undo"></i> Reset</button>
+        </div>
+        <div class="table-responsive">
+            <table id="pasaporte-table">
+                <thead>
+                    <tr>
+                        <th>Detalle</th>
+                        <th onclick="sortTable('pasaporte-table', 1, 'number')">ID</th>
+                        <th onclick="sortTable('pasaporte-table', 2, 'text')">Email</th>
+                        <th onclick="sortTable('pasaporte-table', 3, 'number')">Sellos</th>
+                        <th onclick="sortTable('pasaporte-table', 4, 'text')">Nombre</th>
+                        <th onclick="sortTable('pasaporte-table', 5, 'text')">Dirección</th>
+                        <th onclick="sortTable('pasaporte-table', 6, 'text')">CP</th>
+                        <th onclick="sortTable('pasaporte-table', 7, 'text')">Tlf</th>
+                        <th onclick="sortTable('pasaporte-table', 8, 'text')">Cond.</th>
+                        <th onclick="sortTable('pasaporte-table', 9, 'text')">Subs.</th>
+                    </tr>
+                </thead>
+                <tbody id="pasaporte-table-body"></tbody>
+            </table>
+        </div>
+        <div class="pagination-controls" id="pasaporte-pagination">
+            <div class="pagination-info" id="pasaporte-pagination-info"></div>
+            <div class="pagination-buttons" id="pasaporte-pagination-buttons"></div>
+            <div class="rows-per-page">
+                <span>Registros por página:</span>
+                <select id="pasaporte-rows-per-page" onchange="changePasaportePageSize()">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-wrapper" id="establecimiento-table-wrapper">
+        <div class="table-header">
+            <h2><i class="fas fa-store"></i> Establecimientos</h2>
+            <span class="filter-badge" id="establecimiento-count">Cargando...</span>
+        </div>
+        <div class="filter-container">
+            <input type="text" id="filter-establecimiento-nombre" class="filter-input" placeholder="Filtrar por nombre...">
+            <input type="text" id="filter-establecimiento-email" class="filter-input" placeholder="Filtrar por email...">
+            <select id="filter-establecimiento-tipo" class="filter-select">
+                <option value="">Todos los tipos</option>
+                <option value="Bodega">Bodega</option>
+                <option value="Restaurante">Restaurante</option>
+                <option value="Museo">Museo</option>
+                <option value="Alojamiento">Alojamiento</option>
+                <option value="Vinoteca">Vinoteca</option>
+            </select>
+            <button class="filter-btn" onclick="applyEstablecimientoFilters()"><i class="fas fa-search"></i> Aplicar</button>
+            <button class="filter-btn reset" onclick="resetEstablecimientoFilters()"><i class="fas fa-undo"></i> Reset</button>
+        </div>
+        <div class="table-responsive">
+            <table id="establecimiento-table">
+                <thead>
+                    <tr>
+                        <th>Detalle</th>
+                        <th onclick="sortTable('establecimiento-table', 1, 'number')">ID</th>
+                        <th onclick="sortTable('establecimiento-table', 2, 'text')">Nombre</th>
+                        <th onclick="sortTable('establecimiento-table', 3, 'text')">Email</th>
+                        <th onclick="sortTable('establecimiento-table', 4, 'text')">Tipo</th>
+                        <th onclick="sortTable('establecimiento-table', 5, 'text')">Dirección</th>
+                    </tr>
+                </thead>
+                <tbody id="establecimiento-table-body"></tbody>
+            </table>
+        </div>
+        <div class="pagination-controls" id="establecimiento-pagination">
+            <div class="pagination-info" id="establecimiento-pagination-info"></div>
+            <div class="pagination-buttons" id="establecimiento-pagination-buttons"></div>
+            <div class="rows-per-page">
+                <span>Registros por página:</span>
+                <select id="establecimiento-rows-per-page" onchange="changeEstablecimientoPageSize()">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-wrapper" id="sello-table-wrapper">
+        <div class="table-header">
+            <h2><i class="fas fa-stamp"></i> Sellos</h2>
+            <span class="filter-badge" id="sello-count">Cargando...</span>
+        </div>
+        <div class="filter-container">
+            <input type="text" id="filter-sello-pasaporte" class="filter-input" placeholder="Filtrar por ID Pasaporte...">
+            <input type="text" id="filter-sello-establecimiento" class="filter-input" placeholder="Filtrar por ID Establecimiento...">
+            <input type="date" id="filter-sello-fecha-desde" class="filter-input" style="max-width: 160px;">
+            <span style="color: var(--text-light);">hasta</span>
+            <input type="date" id="filter-sello-fecha-hasta" class="filter-input" style="max-width: 160px;">
+            <button class="filter-btn" onclick="applySelloFilters()"><i class="fas fa-search"></i> Aplicar</button>
+            <button class="filter-btn reset" onclick="resetSelloFilters()"><i class="fas fa-undo"></i> Reset</button>
+        </div>
+        <div class="table-responsive">
+            <table id="sello-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('sello-table', 0, 'number')">ID Pasaporte</th>
+                        <th onclick="sortTable('sello-table', 1, 'number')">ID Establecimiento</th>
+                        <th onclick="sortTable('sello-table', 2, 'date')">Fecha Registro</th>
+                        <th onclick="sortTable('sello-table', 3, 'date')">Fecha Caducidad</th>
+                    </tr>
+                </thead>
+                <tbody id="sello-table-body"></tbody>
+            </table>
+        </div>
+        <div class="pagination-controls" id="sello-pagination">
+            <div class="pagination-info" id="sello-pagination-info"></div>
+            <div class="pagination-buttons" id="sello-pagination-buttons"></div>
+            <div class="rows-per-page">
+                <span>Registros por página:</span>
+                <select id="sello-rows-per-page" onchange="changeSelloPageSize()">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== PÁGINA ESTADÍSTICAS ========== -->
+<section id="estadisticas" class="page">
+    <h1>Dashboard de Estadísticas</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number" id="total-pasaportes">0</div>
+            <div class="stat-title">Pasaportes Registrados</div>
+            <div class="stat-trend" id="trend-pasaportes"><i class="fas fa-chart-line"></i> Cargando...</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="total-establecimientos">0</div>
+            <div class="stat-title">Establecimientos Adheridos</div>
+            <div class="stat-trend" id="trend-establecimientos"><i class="fas fa-chart-line"></i> Cargando...</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="total-sellos">0</div>
+            <div class="stat-title">Sellos Emitidos</div>
+            <div class="stat-trend" id="trend-sellos"><i class="fas fa-chart-line"></i> Cargando...</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="pasaportes-completos">0</div>
+            <div class="stat-title">Pasaportes Completos (4+)</div>
+            <div class="stat-trend" id="trend-completos"><i class="fas fa-trophy"></i> Objetivo 4 sellos</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-tabs">
+        <button class="dashboard-tab active" onclick="switchDashboardTab('general')">📊 General</button>
+        <button class="dashboard-tab" onclick="switchDashboardTab('establecimientos')">🏢 Establecimientos</button>
+        <button class="dashboard-tab" onclick="switchDashboardTab('evolucion')">📈 Evolución</button>
+    </div>
+    
+    <div id="dashboard-general" style="display: block;">
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3><i class="fas fa-chart-pie"></i> Distribución por Tipo</h3>
+                <div class="chart-container"><canvas id="chart-tipos"></canvas></div>
+                <div class="kpi-row" id="stats-tipos"></div>
+            </div>
+            <div class="dashboard-card">
+                <h3><i class="fas fa-trophy"></i> Top 10 Establecimientos</h3>
+                <div class="chart-container"><canvas id="chart-top-establecimientos"></canvas></div>
+                <div style="margin-top: 12px; font-size: 0.9rem; color: var(--text-light); text-align: center;">Establecimientos con más sellos emitidos</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dashboard-establecimientos" style="display: none;">
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3><i class="fas fa-chart-bar"></i> Sellos por Tipo</h3>
+                <div class="chart-container"><canvas id="chart-sellos-tipo"></canvas></div>
+            </div>
+            <div class="dashboard-card">
+                <h3><i class="fas fa-chart-bar"></i> Distribución Geográfica</h3>
+                <div class="chart-container"><canvas id="chart-ubicacion"></canvas></div>
+                <div style="margin-top: 12px; font-size: 0.9rem; color: var(--text-light); text-align: center;">Próximamente: mapa interactivo</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dashboard-evolucion" style="display: none;">
+        <div class="dashboard-card" style="max-width: 100%;">
+            <h3><i class="fas fa-chart-line"></i> Evolución de Registros (últimos 6 meses)</h3>
+            <div class="chart-container" style="height: 350px;"><canvas id="chart-evolucion"></canvas></div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+        <div class="kpi-mini"><div class="value" id="promedio-sellos">0</div><div class="label">Promedio sellos/pasaporte</div></div>
+        <div class="kpi-mini"><div class="value" id="tasa-completados">0%</div><div class="label">Tasa de completados</div></div>
+        <div class="kpi-mini"><div class="value" id="establecimientos-activos">0</div><div class="label">Establec. con sellos</div></div>
+        <div class="kpi-mini"><div class="value" id="ultimo-mes">0</div><div class="label">Nuevos este mes</div></div>
+    </div>
+</section>
+
+<section id="altaestablecimiento" class="page">
+<h1>Alta de Establecimiento</h1>
+<div>
+<form id="alta-establecimiento-form">
+<label for="alta-email">Email (Login):</label>
+<input type="email" id="alta-email" required placeholder="email@establecimiento.com">
+<label for="alta-nombre">Nombre del Establecimiento:</label>
+<input type="text" id="alta-nombre" required placeholder="Ej. Bodegas Familiares">
+<label for="alta-tipo">Tipo:</label>
+<select id="alta-tipo" required>
+<option value="Bodega">Bodega</option>
+<option value="Restaurante">Restaurante</option>
+<option value="Museo">Museo</option>
+<option value="Alojamiento">Alojamiento</option>
+<option value="Vinoteca">Vinoteca</option>
+</select>
+<label for="alta-direccion">Dirección:</label>
+<input type="text" id="alta-direccion" required placeholder="Calle, Localidad...">
+<label for="alta-descripcion">Descripción Corta:</label>
+<textarea id="alta-descripcion" rows="3" required placeholder="Breve descripción de la experiencia..."></textarea>
+<label for="alta-password">Contraseña:</label>
+<div class="password-container">
+<input type="password" id="alta-password" required>
+<i class="fas fa-eye" id="toggle-alta-password"></i>
+</div>
+<label for="alta-confirm-password">Confirmar Contraseña:</label>
+<div class="password-container">
+<input type="password" id="alta-confirm-password" required>
+<i class="fas fa-eye" id="toggle-alta-confirm-password"></i>
+</div>
+<div class="recaptcha-box">
+    <div class="recaptcha-left">
+        <input type="checkbox" id="recaptcha-alta" class="recaptcha-checkbox" required>
+        <label for="recaptcha-alta" class="recaptcha-label">No soy un robot</label>
+</div>
+    <div class="recaptcha-right">
+        <div class="recaptcha-logo"></div>
+        <div class="recaptcha-text">reCAPTCHA<br><a href="#">Privacidad</a> - <a href="#">Términos</a></div>
+    </div>
+</div>
+<button type="submit">Registrar Establecimiento</button>
+</form>
+</div>
+</section>
+
+<section id="detalle-pasaporte" class="page">
+    <h1>Detalle del Pasaporte</h1>
+    <div class="est-panel">
+        <div id="detalle-pasaporte-info">
+            <p><strong>ID:</strong> <span id="detalle-pasaporte-id"></span></p>
+            <p><strong>Email:</strong> <span id="detalle-pasaporte-email"></span></p>
+            <p><strong>Nombre:</strong> <span id="detalle-pasaporte-nombre"></span></p>
+            <p><strong>Dirección:</strong> <span id="detalle-pasaporte-direccion"></span></p>
+            <p><strong>C.P.:</strong> <span id="detalle-pasaporte-cp"></span></p>
+            <p><strong>Teléfono:</strong> <span id="detalle-pasaporte-tlf"></span></p>
+            <p><strong>Aceptó condiciones:</strong> <span id="detalle-pasaporte-condiciones"></span></p>
+            <p><strong>Newsletter:</strong> <span id="detalle-pasaporte-newsletter"></span></p>
+            <p><strong>Total Sellos:</strong> <span id="detalle-pasaporte-total-sellos"></span></p>
+            <h3>Sellos Registrados</h3>
+            <div class="sellos-received-list" id="detalle-pasaporte-sellos-list"></div>
+        </div>
+        <div class="est-controls">
+            <button class="cta-button" onclick="navigateTo('admin')">Volver al Panel Admin</button>
+        </div>
+    </div>
+</section>
+
+<section id="detalle-establecimiento" class="page">
+    <h1>Detalle del Establecimiento</h1>
+    <div class="est-panel">
+        <div id="detalle-establecimiento-info">
+            <p><strong>ID:</strong> <span id="detalle-establecimiento-id"></span></p>
+            <p><strong>Nombre:</strong> <span id="detalle-establecimiento-nombre"></span></p>
+            <p><strong>Email:</strong> <span id="detalle-establecimiento-email"></span></p>
+            <p><strong>Tipo:</strong> <span id="detalle-establecimiento-tipo"></span></p>
+            <p><strong>Dirección:</strong> <span id="detalle-establecimiento-direccion"></span></p>
+            <p><strong>Descripción:</strong> <span id="detalle-establecimiento-descripcion"></span></p>
+            <h3>Estadísticas</h3>
+            <div class="est-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="detalle-establecimiento-total-sellos">0</div>
+                    <div class="stat-label">Sellos Emitidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="detalle-establecimiento-visitantes">0</div>
+                    <div class="stat-label">Visitantes Únicos</div>
+                </div>
+            </div>
+            <h3>Sellos Emitidos Recientemente</h3>
+            <div class="sellos-received-list" id="detalle-establecimiento-sellos-list"></div>
+        </div>
+        <div class="est-controls">
+            <button class="cta-button" onclick="navigateTo('admin')">Volver al Panel Admin</button>
+        </div>
+    </div>
+</section>
+</main>
+
+<div id="scanner-overlay">
+    <h1 style="color: white; margin-bottom: 24px; font-size: 2rem;">Escanear QR</h1>
+    <div id="camera-window">
+        <canvas id="scanner-canvas"></canvas>
+        <button id="btn-sellar-overlay" onclick="sellarDesdeScanner()">Sellar</button>
+    </div>
+    <div id="qr-result-label">Buscando código QR...</div>
+    <button onclick="stopScanningOverlay()" style="margin-top: 24px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 12px 32px; border-radius: var(--radius-md); cursor:pointer; font-size: 1rem; font-weight: 600; backdrop-filter: blur(10px); transition: var(--transition-normal);">Cancelar</button>
+</div>
+
+<div id="scanner-success-msg">
+    <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+    Su pasaporte ha sido sellado con éxito
+</div>
+
+<!-- ========== FOOTER DINÁMICO POR ROL ========== -->
+<footer id="main-footer">
+    <!-- Se genera dinámicamente según el rol -->
+</footer>
+
+<!-- ========== BOTÓN FLOTANTE PWA Y MODAL DE INSTALACIÓN ========== -->
+<button class="pwa-fab" id="pwaFab" onclick="togglePwaModal()">
+    <i class="fas fa-download"></i>
+</button>
+
+<div class="pwa-modal-overlay" id="pwaModalOverlay" onclick="closePwaModal()">
+    <div class="pwa-modal" onclick="event.stopPropagation()">
+        <div class="pwa-particles" id="pwaParticles"></div>
+        
+        <div class="pwa-modal-header">
+            <div class="pwa-modal-title">
+                <i class="fas fa-wine-bottle"></i>
+                <span>Instalar App</span>
+            </div>
+            <button class="pwa-modal-close" onclick="closePwaModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="pwa-modal-content">
+            <p><strong>Pasaporte Turístico del Vino PWA</strong></p>
+            <p>Instala esta aplicación en tu dispositivo para:</p>
+            
+            <ul class="pwa-features">
+                <li><i class="fas fa-check-circle"></i> Acceso rápido desde la pantalla de inicio</li>
+                <li><i class="fas fa-check-circle"></i> Notificaciones de nuevos sellos</li>
+                <li><i class="fas fa-check-circle"></i> Experiencia sin conexión</li>
+                <li><i class="fas fa-check-circle"></i> Actualizaciones automáticas</li>
+            </ul>
+            
+            <p style="font-style: italic; margin-top: 15px;">La instalación es gratuita y rápida.</p>
+        </div>
+        
+        <button class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()">
+            <i class="fas fa-download"></i>
+            <span>Instalar Aplicación</span>
+        </button>
+        
+        <div style="margin-top: 15px; text-align: center;">
+            <button onclick="closePwaModal()" style="background: transparent; border: none; color: #ddd; font-size: 0.9rem; cursor: pointer; padding: 5px 10px;">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- CONFIGURACIÓN SUPABASE ---
+const SB_URL = 'https://ggpuicskbxgdelvghnte.supabase.co' ;
+const SB_KEY = 'sb_publishable_2bdk3ULr8fwqv_D8zn6yMw_Vl-HiEl-';
+const { createClient } = supabase;
+const _supabase = createClient(SB_URL, SB_KEY);
+
+// Variables globales
+let currentSort = { tableId: null, columnIndex: null, direction: 'asc', type: null };
+let chartInstances = {};
+let deferredPrompt;
+let isPWAInstalled = false;
+
+// --- NUEVAS VARIABLES DE ROL ---
+let currentRole = 'guest'; // 'guest', 'pasaporte', 'establecimiento', 'admin'
+
+// Datos globales para admin y estadísticas
+let globalPasaportes = [];
+let globalEstablecimientos = [];
+let globalSellos = [];
+
+// Estados de paginación
+let pasaportePagination = { page: 1, pageSize: 10, filteredData: [] };
+let establecimientoPagination = { page: 1, pageSize: 10, filteredData: [] };
+let selloPagination = { page: 1, pageSize: 10, filteredData: [] };
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- VARIABLES ESCÁNER ---
+    const scannerVideo = document.createElement("video");
+    const scannerCanvasElement = document.getElementById("scanner-canvas");
+    const scannerCanvas = scannerCanvasElement.getContext("2d", { willReadFrequently: true });
+    const scannerOverlay = document.getElementById("scanner-overlay");
+    const cameraWindow = document.getElementById("camera-window");
+    const resultLabel = document.getElementById("qr-result-label");
+    const btnSellarOverlay = document.getElementById("btn-sellar-overlay");
+    const scannerSuccessMsg = document.getElementById("scanner-success-msg");
+
+    let scanning = false;
+    let localStream = null;
+    let currentQRData = null;
+
+    // Menu contextual
+    const menuIcon = document.getElementById('menu-icon');
+    const menu = document.getElementById('menu');
+    const closeMenuBtn = menu.querySelector('.close');
+    const overlay = document.getElementById('overlay');
+    const pages = document.querySelectorAll('.page');
+    const menuItems = document.getElementById('menu-items');
+
+    function toggleMenu() {
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        loadContextItems();
+    }
+
+    menuIcon.addEventListener('click', toggleMenu);
+    closeMenuBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', () => { if (menu.classList.contains('active')) toggleMenu(); });
+
+    // --- CARGAR ROL DESDE STORAGE AL INICIO ---
+    function initializeRole() {
+        const savedRole = localStorage.getItem('currentRole');
+        const pasaporteId = localStorage.getItem('currentPasaporteId');
+        const establecimientoId = localStorage.getItem('currentEstablecimientoId');
+        const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+        
+        if (isAdminLoggedIn === 'true') {
+            currentRole = 'admin';
+        } else if (establecimientoId) {
+            currentRole = 'establecimiento';
+        } else if (pasaporteId) {
+            currentRole = 'pasaporte';
+        } else {
+            currentRole = 'guest';
+        }
+        
+        updateRoleUI();
+    }
+
+    // --- ACTUALIZAR UI SEGÚN ROL ---
+    function updateRoleUI() {
+        updateHeaderRole();
+        updateFooter();
+    }
+
+    // --- ACTUALIZAR HEADER SEGÚN ROL ---
+    function updateHeaderRole() {
+        const indicator = document.getElementById('role-indicator-header');
+        const indicatorText = document.getElementById('role-indicator-text');
+        const registerBtn = document.getElementById('header-register-btn');
+        
+        if (currentRole === 'guest') {
+            indicator.style.display = 'none';
+            registerBtn.style.display = 'flex';
+        } else {
+            indicator.style.display = 'flex';
+            registerBtn.style.display = currentRole === 'pasaporte' ? 'none' : 'flex';
+            
+            indicator.className = 'role-indicator ' + currentRole;
+            
+            switch(currentRole) {
+                case 'pasaporte':
+                    indicatorText.textContent = 'Viajero';
+                    indicator.querySelector('i').className = 'fas fa-passport';
+                    break;
+                case 'establecimiento':
+                    indicatorText.textContent = 'Establecimiento';
+                    indicator.querySelector('i').className = 'fas fa-store';
+                    break;
+                case 'admin':
+                    indicatorText.textContent = 'Admin';
+                    indicator.querySelector('i').className = 'fas fa-crown';
+                    break;
+            }
+        }
+    }
+
+    // --- ACTUALIZAR FOOTER SEGÚN ROL ---
+    function updateFooter() {
+        const footer = document.getElementById('main-footer');
+        let footerHTML = '';
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get('page') || 'inicio';
+        
+        switch(currentRole) {
+            case 'guest':
+                footerHTML = `
+                    <div class="footer-icon ${currentPage === 'inicio' ? 'active' : ''}" onclick="navigateTo('inicio')">
+                        <i class="fas fa-home"></i><span>Inicio</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'registrar' ? 'active' : ''}" onclick="navigateTo('registrar')">
+                        <i class="fas fa-plus-circle"></i><span>Registrar</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'establecimientos' ? 'active' : ''}" onclick="navigateTo('establecimientos')">
+                        <i class="fas fa-store"></i><span>Establec.</span>
+                    </div>
+                `;
+                break;
+                
+            case 'pasaporte':
+                footerHTML = `
+                    <div class="footer-icon ${currentPage === 'inicio' ? 'active' : ''}" onclick="navigateTo('inicio')">
+                        <i class="fas fa-home"></i><span>Inicio</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'mipasaporte' ? 'active' : ''}" onclick="navigateTo('mipasaporte')">
+                        <i class="fas fa-passport"></i><span>Mi Pasaporte</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'establecimientos' ? 'active' : ''}" onclick="navigateTo('establecimientos')">
+                        <i class="fas fa-store"></i><span>Establec.</span>
+                    </div>
+                `;
+                break;
+                
+            case 'establecimiento':
+                footerHTML = `
+                    <div class="footer-icon ${currentPage === 'inicio' ? 'active' : ''}" onclick="navigateTo('inicio')">
+                        <i class="fas fa-home"></i><span>Inicio</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'miestablecimiento' ? 'active' : ''}" onclick="navigateTo('miestablecimiento')">
+                        <i class="fas fa-store-alt"></i><span>Mi Establec.</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'establecimientos' ? 'active' : ''}" onclick="navigateTo('establecimientos')">
+                        <i class="fas fa-list"></i><span>Todos</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'estadisticas' ? 'active' : ''}" onclick="navigateTo('estadisticas')">
+                        <i class="fas fa-chart-bar"></i><span>Estadísticas</span>
+                    </div>
+                `;
+                break;
+                
+            case 'admin':
+                footerHTML = `
+                    <div class="footer-icon ${currentPage === 'admin' ? 'active' : ''}" onclick="navigateTo('admin')">
+                        <i class="fas fa-cogs"></i><span>Admin</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'estadisticas' ? 'active' : ''}" onclick="navigateTo('estadisticas')">
+                        <i class="fas fa-chart-bar"></i><span>Stats</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'establecimientos' ? 'active' : ''}" onclick="navigateTo('establecimientos')">
+                        <i class="fas fa-store"></i><span>Establec.</span>
+                    </div>
+                    <div class="footer-icon ${currentPage === 'altaestablecimiento' ? 'active' : ''}" onclick="navigateTo('altaestablecimiento')">
+                        <i class="fas fa-plus-circle"></i><span>Alta Est.</span>
+                    </div>
+                `;
+                break;
+        }
+        
+        footer.innerHTML = footerHTML;
+    }
+
+    // --- MODAL DE PERFIL ---
+    function loadContextItems() {
+        menuItems.innerHTML = '';
+        
+        const menuHeader = document.querySelector('.menu-header');
+        const menuTitle = document.getElementById('menu-title');
+        const menuSubtitle = document.getElementById('menu-subtitle');
+        
+        // Título según rol
+        switch(currentRole) {
+            case 'guest':
+                menuTitle.textContent = 'Menú';
+                menuSubtitle.textContent = 'Opciones disponibles';
+                break;
+            case 'pasaporte':
+                menuTitle.textContent = 'Viajero';
+                menuSubtitle.textContent = localStorage.getItem('pasaporteNombre') || 'Usuario';
+                break;
+            case 'establecimiento':
+                menuTitle.textContent = 'Establecimiento';
+                menuSubtitle.textContent = localStorage.getItem('establecimientoNombre') || 'Establecimiento';
+                break;
+            case 'admin':
+                menuTitle.textContent = 'Administrador';
+                menuSubtitle.textContent = 'Panel de control';
+                break;
+        }
+        
+        // Items según rol
+        let items = [];
+        
+        if (currentRole === 'admin') {
+            items = [
+                { name: 'Panel Admin', page: 'admin', icon: 'fas fa-cogs' },
+                { name: 'Estadísticas', page: 'estadisticas', icon: 'fas fa-chart-bar' },
+                { name: 'Alta Establecimiento', page: 'altaestablecimiento', icon: 'fas fa-plus-circle' },
+                { name: 'Establecimientos', page: 'establecimientos', icon: 'fas fa-store' },
+                { name: 'Términos y Condiciones', page: 'terminos', icon: 'fas fa-file-contract' },
+                { name: 'Cerrar Sesión', action: 'logoutAdmin', icon: 'fas fa-sign-out-alt' }
+            ];
+        } else if (currentRole === 'establecimiento') {
+            items = [
+                { name: 'Mi Establecimiento', page: 'miestablecimiento', icon: 'fas fa-store-alt' },
+                { name: 'Establecimientos', page: 'establecimientos', icon: 'fas fa-store' },
+                { name: 'Estadísticas', page: 'estadisticas', icon: 'fas fa-chart-bar' },
+                { name: 'Inicio', page: 'inicio', icon: 'fas fa-home' },
+                { name: 'Términos y Condiciones', page: 'terminos', icon: 'fas fa-file-contract' },
+                { name: 'Cerrar Sesión', action: 'logoutEstablecimiento', icon: 'fas fa-sign-out-alt' }
+            ];
+        } else if (currentRole === 'pasaporte') {
+            items = [
+                { name: 'Mi Pasaporte', page: 'mipasaporte', icon: 'fas fa-passport' },
+                { name: 'Establecimientos', page: 'establecimientos', icon: 'fas fa-store' },
+                { name: 'Inicio', page: 'inicio', icon: 'fas fa-home' },
+                { name: 'Términos y Condiciones', page: 'terminos', icon: 'fas fa-file-contract' },
+                { name: 'Cerrar Sesión', action: 'logoutPasaporte', icon: 'fas fa-sign-out-alt' }
+            ];
+        } else {
+            items = [
+                { name: 'Inicio', page: 'inicio', icon: 'fas fa-home' },
+                { name: 'Registrar Pasaporte', page: 'registrar', icon: 'fas fa-plus-circle' },
+                { name: 'Establecimientos', page: 'establecimientos', icon: 'fas fa-store' },
+                { name: 'Términos y Condiciones', page: 'terminos', icon: 'fas fa-file-contract' }
+            ];
+        }
+        
+        items.forEach(item => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.innerHTML = `<i class="${item.icon}"></i>${item.name}`;
+            a.href = '#';
+            
+            if (item.action) {
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    toggleMenu();
+                    window[item.action]();
+                };
+            } else {
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    navigateTo(item.page);
+                    toggleMenu();
+                };
+            }
+            
+            li.appendChild(a);
+            menuItems.appendChild(li);
+        });
+    }
+
+    window.navigateTo = function(page) {
+        history.pushState(null, '', `?page=${page}`);
+        loadPage();
+    };
+
+    function loadPage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 'inicio';
+        pages.forEach(p => p.classList.remove('active'));
+        const activePage = document.getElementById(page);
+        if (activePage) activePage.classList.add('active');
+        else if (page === 'inicio') document.getElementById('inicio').classList.add('active');
+        
+        // Actualizar footer
+        updateFooter();
+
+        if (page === 'mipasaporte') loadPasaporteInfo();
+        if (page === 'admin') {
+            if (localStorage.getItem('isAdminLoggedIn') === 'true') {
+                loadAdminData();
+            } else {
+                navigateTo('admin-login');
+            }
+        }
+        if (page === 'estadisticas') {
+            loadEstadisticasCompletas();
+        }
+        if (page === 'establecimientos') {
+            renderEstablecimientos();
+            document.getElementById('search-input').value = '';
+        }
+        if (page === 'registrar') {
+            const form = document.getElementById('register-form');
+            form.reset();
+            document.getElementById('post-register-actions').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('qr-code').innerHTML = '';
+            document.getElementById('condiciones-check').checked = true;
+            document.getElementById('newsletter-check').checked = true;
+            document.getElementById('notificaciones-check').checked = true;
+        }
+        if (page === 'miestablecimiento') {
+            const idEst = localStorage.getItem('currentEstablecimientoId');
+            const loginFormContainer = document.getElementById('mi-establecimiento-form-container');
+            const panel = document.getElementById('mi-establecimiento-panel');
+            if (idEst) {
+                loginFormContainer.style.display = 'none';
+                panel.style.display = 'block';
+                loadEstablecimientoPanel();
+            } else {
+                loginFormContainer.style.display = 'block';
+                document.getElementById('mi-establecimiento-login-form').reset();
+                panel.style.display = 'none';
+            }
+        }
+    }
+
+    window.addEventListener('popstate', loadPage);
+    
+    // --- HELPERS ---
+    const formatDate = (iso) => {
+        if(!iso) return '';
+        const d = new Date(iso);
+        return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;      
+    };
+    
+    const getExpiry = () => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() + 1);
+        return d.toISOString();
+    };
+
+    // --- DB ACTIONS (SUPABASE) ---
+    window.db = {
+        addPasaporte: async (data) => {
+            const { data: res, error } = await _supabase.from('Pasaporte').insert([data]).select().single();
+            if (error) throw error;
+            return res;
+        },
+        getPasaporte: async (id) => {
+            const { data, error } = await _supabase.from('Pasaporte').select('*').eq('id', id).single();
+            if (error) return null;
+            return data;
+        },
+        getPasaporteByEmail: async (email) => {
+            const { data, error } = await _supabase.from('Pasaporte').select('*').eq('email', email).single();
+            if (error) return null;
+            return data;
+        },
+        loginPasaporte: async (email, passwd) => {
+            const { data, error } = await _supabase.from('Pasaporte').select('*').eq('email', email).eq('passwd', passwd).single();
+            if (error) return null;
+            return data;
+        },
+        getSellosByPasaporte: async (id) => {
+            const { data, error } = await _supabase.from('Sello').select('*').eq('id_pasaporte', id);
+            if (error) return [];
+            return data;
+        },
+        addEstablecimiento: async (data) => {
+            const { data: res, error } = await _supabase.from('Establecimiento').insert([data]).select().single();
+            if (error) throw error;
+            return res;
+        },
+        getEstablecimiento: async (id) => {
+            const { data, error } = await _supabase.from('Establecimiento').select('*').eq('id', id).single();
+            if (error) return null;
+            return data;
+        },
+        loginEstablecimiento: async (email, passwd) => {
+            const { data, error } = await _supabase.from('Establecimiento').select('*').eq('email', email).eq('passwd', passwd).single();
+            if (error) return null;
+            return data;
+        },
+        getAllEstablecimientos: async () => {
+            const { data, error } = await _supabase.from('Establecimiento').select('*');
+            if (error) return [];
+            return data;
+        },
+        addSello: async (data) => {
+            const { data: res, error } = await _supabase.from('Sello').insert([data]).select().single();
+            if (error) throw error;
+            return res;
+        },
+        getSellosByEstablecimiento: async (id) => {
+            const { data, error } = await _supabase.from('Sello').select('*').eq('id_establecimiento', id);
+            if (error) return [];
+            return data;
+        },
+        checkSelloExists: async (pid, eid) => {
+            const { data, error } = await _supabase.from('Sello').select('*').eq('id_pasaporte', pid).eq('id_establecimiento', eid).maybeSingle();
+            if (error) return false;
+            return !!data;
+        },
+        getTable: async (table) => {
+            const { data, error } = await _supabase.from(table).select('*');
+            if (error) return [];
+            return data;
+        }
+    };
+
+    // --- REGISTRO ---
+    const registerForm = document.getElementById('register-form');
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = document.getElementById('error-message');
+        const succ = document.getElementById('success-message');
+        const qrDiv = document.getElementById('qr-code');
+        err.style.display = 'none'; succ.style.display = 'none'; qrDiv.innerHTML = '';
+
+        if (!document.getElementById('recaptcha-registrar').checked) {
+            err.textContent = 'Completa la verificación.'; err.style.display = 'block'; return;
+        }
+        if (!document.getElementById('condiciones-check').checked) {
+            err.textContent = 'Debe aceptar las condiciones.'; err.style.display = 'block'; return;
+        }
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const nombre = document.getElementById('nombre').value.trim();
+        const direccion = document.getElementById('direccion').value.trim();
+        const codigo_postal = document.getElementById('codigo_postal').value.trim();
+        
+        if (!direccion) {
+            err.textContent = 'La dirección es obligatoria.'; err.style.display = 'block'; return;
+        }
+        if (!codigo_postal || !/^[0-9]{5}$/.test(codigo_postal)) {
+            err.textContent = 'El código postal debe tener 5 dígitos.'; err.style.display = 'block'; return;
+        }
+        
+        if (password !== document.getElementById('confirm-password').value) {
+            err.textContent = 'Las contraseñas no coinciden.'; err.style.display = 'block'; return;
+        }
+
+        try {
+            const existing = await db.getPasaporteByEmail(email);
+            if (existing) {
+                err.textContent = 'El email ya está registrado.'; err.style.display = 'block'; return;
+            }
+
+            const newP = await db.addPasaporte({ 
+                email, 
+                passwd: password, 
+                nombre: nombre,
+                direccion: direccion,
+                codigo_postal: codigo_postal,
+                tlf: document.getElementById('tlf').value,
+                acep_cond: document.getElementById('condiciones-check').checked,
+                suscrito: document.getElementById('newsletter-check').checked
+            });
+            
+            succ.textContent = '¡Pasaporte creado con éxito!'; succ.style.display = 'block';
+            const qrUrl = `airooc41n.github.io/miapp?email=${encodeURIComponent(email)}&Id=${newP.id}`;
+            new QRCode(qrDiv, { text: qrUrl, width: 300, height: 300, colorDark: "#8B1E3F", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.H });
+            
+            localStorage.setItem('currentPasaporteId', newP.id);
+            localStorage.setItem('pasaporteNombre', nombre);
+            
+            // Actualizar rol
+            currentRole = 'pasaporte';
+            localStorage.setItem('currentRole', 'pasaporte');
+            updateRoleUI();
+            
+            document.getElementById('post-register-actions').style.display = 'block';
+            registerForm.style.display = 'none';
+        } catch (ex) {
+            console.error(ex);
+            err.textContent = 'Error al registrar: ' + ex.message; err.style.display = 'block';
+        }
+    });
+
+    // --- LOGIN PASAPORTE ---
+    const loginForm = document.getElementById('login-form');
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const loginError = document.getElementById('login-error');
+        loginError.style.display = 'none';
+
+        if (!document.getElementById('recaptcha-login').checked) {
+            loginError.textContent = 'Completa la verificación.'; loginError.style.display = 'block'; return;
+        }
+
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-password').value;
+        
+        try {
+            const p = await db.loginPasaporte(email, pass);
+            if (!p) {
+                loginError.textContent = 'Credenciales incorrectas.'; loginError.style.display = 'block'; return;
+            }
+            localStorage.setItem('currentPasaporteId', p.id);
+            localStorage.setItem('pasaporteNombre', p.nombre);
+            
+            // Actualizar rol
+            currentRole = 'pasaporte';
+            localStorage.setItem('currentRole', 'pasaporte');
+            updateRoleUI();
+            
+            closeProfileModal();
+            loadPasaporteInfo();
+        } catch(ex) {
+            loginError.textContent = 'Error de conexión.'; loginError.style.display = 'block';
+        }
+    });
+
+    // --- MI PASAPORTE ---
+    async function loadPasaporteInfo() {
+        const id = localStorage.getItem('currentPasaporteId');
+        const info = document.getElementById('pasaporte-info');
+        const loginF = document.getElementById('login-form');
+        const premioSection = document.getElementById('premio-section');
+
+        if (!id) { loginF.style.display = 'block'; info.style.display = 'none'; return; }
+
+        try {
+            const p = await db.getPasaporte(id);
+            if (!p) { logoutPasaporte(); return; }
+
+            loginF.style.display = 'none';
+            info.style.display = 'block';
+            document.getElementById('pasaporte-email').textContent = `Email: ${p.email}`;
+            document.getElementById('pasaporte-nombre-display').textContent = `Bienvenido, ${p.nombre || 'viajero'}`;
+            
+            const sellos = await db.getSellosByPasaporte(id);
+            
+            await actualizarSellosVisuales(sellos);
+            await actualizarHistorialSellos(sellos);
+            
+            const estIds = [...new Set(sellos.map(s => s.id_establecimiento))];
+            if (estIds.length >= 4) {
+                premioSection.style.display = 'block';
+                premioSection.innerHTML = '<div class="premio-section"><h3>¡Enhorabuena! Tienes 4 sellos diferentes.</h3><p>Puedes reclamar tu premio.</p></div>';
+            } else {
+                premioSection.style.display = 'none';
+            }
+
+            const qrCont = document.getElementById('pasaporte-qr');
+            qrCont.innerHTML = '';
+            const qrUrl = `airooc41n.github.io/miapp?email=${encodeURIComponent(p.email)}&Id=${p.id}`;
+            new QRCode(qrCont, { text: qrUrl, width: 250, height: 250, colorDark: "#8B1E3F", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.H });
+        } catch (e) { console.error(e); }
+    }
+
+    async function actualizarSellosVisuales(sellos) {
+        for (let i = 1; i <= 4; i++) {
+            const selloIcon = document.getElementById(`sello-${i}`);
+            const selloLabel = document.getElementById(`sello-label-${i}`);
+            const selloNombre = document.getElementById(`sello-nombre-${i}`);
+            
+            selloIcon.classList.remove('active');
+            selloLabel.classList.remove('active');
+            selloNombre.textContent = '';
+            selloLabel.textContent = `Experiencia ${i}`;
+            const icon = selloIcon.querySelector('i');
+            icon.className = 'fas fa-wine-bottle';
+        }
+        
+        const sellosRecientes = [...sellos].sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg)).slice(0, 4);
+        
+        for (let i = 0; i < sellosRecientes.length; i++) {
+            const sello = sellosRecientes[i];
+            const selloIcon = document.getElementById(`sello-${i+1}`);
+            const selloLabel = document.getElementById(`sello-label-${i+1}`);
+            const selloNombre = document.getElementById(`sello-nombre-${i+1}`);
+            
+            const establecimiento = await db.getEstablecimiento(sello.id_establecimiento);
+            
+            selloIcon.classList.add('active');
+            selloLabel.classList.add('active');
+            selloLabel.textContent = establecimiento?.nombre?.substring(0, 20) || 'Establecimiento';
+            selloNombre.textContent = establecimiento?.type || '';
+            
+            const icon = selloIcon.querySelector('i');
+            if (establecimiento) {
+                if (establecimiento.type === 'Bodega') icon.className = 'fas fa-wine-bottle';
+                else if (establecimiento.type === 'Restaurante') icon.className = 'fas fa-utensils';
+                else if (establecimiento.type === 'Museo') icon.className = 'fas fa-landmark';
+                else if (establecimiento.type === 'Alojamiento') icon.className = 'fas fa-bed';
+                else if (establecimiento.type === 'Vinoteca') icon.className = 'fas fa-glass-cheers';
+                else icon.className = 'fas fa-wine-bottle';
+            }
+        }
+    }
+
+    async function actualizarHistorialSellos(sellos) {
+        const historialContainer = document.getElementById('sellos-historial-lista');
+        
+        if (!sellos || sellos.length === 0) {
+            historialContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-light);">Aún no tienes sellos. ¡Visita establecimientos para comenzar tu colección!</p>';
+            return;
+        }
+        
+        const sellosOrdenados = [...sellos].sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+        
+        let html = '';
+        
+        for (const sello of sellosOrdenados) {
+            const establecimiento = await db.getEstablecimiento(sello.id_establecimiento);
+            const nombreEst = establecimiento?.nombre || 'Establecimiento desconocido';
+            const tipoEst = establecimiento?.type || 'Otro';
+            const fecha = formatDate(sello.fecha_reg);
+            
+            let icono = 'fa-wine-bottle';
+            if (tipoEst === 'Bodega') icono = 'fa-wine-bottle';
+            else if (tipoEst === 'Restaurante') icono = 'fa-utensils';
+            else if (tipoEst === 'Museo') icono = 'fa-landmark';
+            else if (tipoEst === 'Alojamiento') icono = 'fa-bed';
+            else if (tipoEst === 'Vinoteca') icono = 'fa-glass-cheers';
+            
+            html += `
+                <div class="historial-item">
+                    <div class="historial-icon">
+                        <i class="fas ${icono}"></i>
+                    </div>
+                    <div class="historial-info">
+                        <div class="historial-nombre">${nombreEst}</div>
+                        <div class="historial-fecha">${fecha}</div>
+                    </div>
+                    <span class="historial-tipo">${tipoEst}</span>
+                </div>
+            `;
+        }
+        
+        historialContainer.innerHTML = html;
+    }
+
+    // --- LOGOUT PASAPORTE ---
+    window.logoutPasaporte = () => { 
+        localStorage.removeItem('currentPasaporteId');
+        localStorage.removeItem('pasaporteNombre');
+        localStorage.removeItem('currentRole');
+        
+        currentRole = 'guest';
+        updateRoleUI();
+        
+        for (let i = 1; i <= 4; i++) {
+            const selloIcon = document.getElementById(`sello-${i}`);
+            const selloLabel = document.getElementById(`sello-label-${i}`);
+            const selloNombre = document.getElementById(`sello-nombre-${i}`);
+            selloIcon?.classList.remove('active');
+            selloLabel?.classList.remove('active');
+            selloNombre.textContent = '';
+            selloLabel.textContent = `Experiencia ${i}`;
+            const icon = selloIcon?.querySelector('i');
+            if (icon) icon.className = 'fas fa-wine-bottle';
+        }
+        navigateTo('inicio');
+    };
+
+    window.renderEstablecimientos = async () => {
+        const list = document.getElementById('establecimientos-list');
+        list.innerHTML = '<p>Cargando...</p>';
+        
+        const ests = await db.getAllEstablecimientos();
+        list.innerHTML = '';
+
+        ests.forEach(est => {
+            const card = document.createElement('div');
+            card.className = 'est-card';
+            let iconClass = 'fa-building';
+            if(est.type === 'Bodega') iconClass = 'fa-wine-bottle';
+            if(est.type === 'Restaurante') iconClass = 'fa-utensils';
+            if(est.type === 'Museo') iconClass = 'fa-landmark';
+            if(est.type === 'Alojamiento') iconClass = 'fa-bed';
+            if(est.type === 'Vinoteca') iconClass = 'fa-glass-cheers';
+
+            card.innerHTML = `
+            <div class="est-header">
+                <i class="fas ${iconClass}" style="font-size: 2.5em; opacity: 0.9;"></i>
+                <span class="est-type-badge">${est.type || 'Varios'}</span>
+            </div>
+            <div class="est-body">
+                <h3>${est.nombre || 'Sin nombre'}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${est.direccion || ''}</p>
+                <p>${est.descripcion || ''}</p>
+            </div>
+            `;
+            card.dataset.nombre = (est.nombre || '').toLowerCase();
+            card.dataset.tipo = (est.type || '').toLowerCase();
+            card.dataset.direccion = (est.direccion || '').toLowerCase();
+            list.appendChild(card);
+        });
+    };
+
+    window.filterEstablecimientos = () => {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.est-card');
+        cards.forEach(card => {
+            const match = (card.dataset.nombre || '').includes(query) || (card.dataset.tipo || '').includes(query) || (card.dataset.direccion || '').includes(query);
+            card.style.display = match ? 'flex' : 'none';
+        });
+    };
+
+    // --- LOGIN ESTABLECIMIENTO ---
+    const miEstLoginForm = document.getElementById('mi-establecimiento-login-form');
+    if (miEstLoginForm) {
+        miEstLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!document.getElementById('recaptcha-est-login').checked) { alert('Completa la verificación.'); return; }
+
+            const email = document.getElementById('mi-est-email').value.trim();
+            const password = document.getElementById('mi-est-password').value;
+            
+            try {
+                const est = await db.loginEstablecimiento(email, password);
+                if (!est) { alert('Credenciales incorrectas.'); return; }
+                
+                localStorage.setItem('currentEstablecimientoId', est.id);
+                localStorage.setItem('establecimientoNombre', est.nombre);
+                
+                // Actualizar rol
+                currentRole = 'establecimiento';
+                localStorage.setItem('currentRole', 'establecimiento');
+                updateRoleUI();
+                
+                closeProfileModal();
+                document.getElementById('mi-establecimiento-form-container').style.display = 'none';
+                document.getElementById('mi-establecimiento-panel').style.display = 'block';
+                loadEstablecimientoPanel();
+            } catch(ex) { alert('Error de conexión.'); }
+        });
+    }
+
+    async function loadEstablecimientoPanel() {
+        const id = localStorage.getItem('currentEstablecimientoId');
+        if (!id) { navigateTo('miestablecimiento'); return; }
+
+        try {
+            const est = await db.getEstablecimiento(id);
+            if (!est) { logoutEstablecimiento(); return; }
+
+            document.getElementById('est-nombre-display').textContent = est.nombre;
+            const sellos = await db.getSellosByEstablecimiento(id);
+            document.getElementById('sellos-count').textContent = sellos.length;
+            const pasaportesUnicos = [...new Set(sellos.map(s => s.id_pasaporte))];
+            document.getElementById('visitas-count').textContent = pasaportesUnicos.length;
+
+            const list = document.getElementById('sellos-list');
+            list.innerHTML = '';
+            if (sellos.length === 0) {
+                list.innerHTML = '<p style="padding: 20px; text-align:center;">No hay sellos.</p>';
+            } else {
+                sellos.sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+                sellos.slice(0, 10).forEach(s => {
+                    const div = document.createElement('div');
+                    div.style.padding = '12px'; div.style.borderBottom = '1px solid var(--border)';
+                    div.innerHTML = `<div><strong>ID Pasaporte:</strong> ${s.id_pasaporte}</div><div><strong>Fecha:</strong>${formatDate(s.fecha_reg)}</div>`;
+                    list.appendChild(div);
+                });
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // --- LOGOUT ESTABLECIMIENTO ---
+    window.logoutEstablecimiento = () => { 
+        localStorage.removeItem('currentEstablecimientoId');
+        localStorage.removeItem('establecimientoNombre');
+        localStorage.removeItem('currentRole');
+        
+        currentRole = 'guest';
+        updateRoleUI();
+        
+        navigateTo('inicio');
+    };
+
+    // --- ESCANER ---
+    window.startScanningOverlay = function() {
+        scannerOverlay.style.display = "flex";
+        btnSellarOverlay.style.display = "none";
+        cameraWindow.classList.remove("detected");
+        resultLabel.innerText = "Buscando código QR...";
+        scannerSuccessMsg.style.display = 'none';
+        scanning = true;
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+            localStream = stream; scannerVideo.srcObject = stream; scannerVideo.setAttribute("playsinline", true); scannerVideo.play();
+            requestAnimationFrame(tickOverlay);
+        }).catch(function(err) { alert("Error cámara: " + err); stopScanningOverlay(); });
+    }
+
+    function tickOverlay() {
+        if (!scanning) return;
+        if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+            scannerCanvasElement.height = scannerVideo.videoHeight
+                      scannerCanvasElement.width = scannerVideo.videoWidth;
+            scannerCanvas.drawImage(scannerVideo, 0, 0, scannerCanvasElement.width, scannerCanvasElement.height);
+            var imageData = scannerCanvas.getImageData(0, 0, scannerCanvasElement.width, scannerCanvasElement.height);
+            var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            if (code) {
+                if (!cameraWindow.classList.contains("detected")) cameraWindow.classList.add("detected");
+                resultLabel.innerText = "Detectado.";
+                currentQRData = code.data;
+                if (btnSellarOverlay.style.display !== "block") {
+                    btnSellarOverlay.style.display = "block";
+                    if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(200);
+                }
+            }
+        }
+        requestAnimationFrame(tickOverlay);
+    }
+
+    window.stopScanningOverlay = function() {
+        scanning = false; 
+        if (localStream) localStream.getTracks().forEach(track => track.stop()); 
+        scannerOverlay.style.display = "none";
+    }
+
+    window.sellarDesdeScanner = async function() {
+        if (!currentQRData) return;
+        const urlParams = new URLSearchParams(currentQRData);
+        let idPasaporte = urlParams.get('Id');
+        if (!idPasaporte && currentQRData.includes('Id=')) idPasaporte = currentQRData.split('Id=')[1].split('&')[0];
+        if (!idPasaporte) { alert('QR no válido.'); return; }
+
+        const currentEstId = localStorage.getItem('currentEstablecimientoId');
+        if (!currentEstId) { alert('Sesión caducada.'); stopScanningOverlay(); return; }
+
+        try {
+            const pass = await db.getPasaporte(idPasaporte);
+            if (!pass) { alert('Pasaporte no encontrado en DB.'); return; }
+
+            const exists = await db.checkSelloExists(idPasaporte, currentEstId);
+            if (exists) { alert('Este pasaporte ya tiene tu sello.'); return; }
+
+            await db.addSello({
+                id_pasaporte: idPasaporte,
+                id_establecimiento: currentEstId,
+                fecha_reg: new Date().toISOString(),
+                fecha_cad: getExpiry()
+            });
+
+            scanning = false; 
+            if (localStream) localStream.getTracks().forEach(track => track.stop()); 
+            scannerOverlay.style.display = "none";
+            scannerSuccessMsg.style.display = 'block';
+            setTimeout(() => { scannerSuccessMsg.style.display = 'none'; loadEstablecimientoPanel(); }, 2000);
+
+        } catch (ex) {
+            alert('Error al sellar: ' + ex.message);
+        }
+    };
+
+    // --- ADMIN LOGIN ---
+    const adminLoginForm = document.getElementById('admin-login-form');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!document.getElementById('recaptcha-admin').checked) { alert('Verifica recaptcha'); return; }
+            if (document.getElementById('admin-email').value === 'admin@admin.com' && document.getElementById('admin-password').value === 'admin') {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                
+                // Actualizar rol
+                currentRole = 'admin';
+                localStorage.setItem('currentRole', 'admin');
+                updateRoleUI();
+                
+                closeProfileModal();
+                navigateTo('admin');
+            } else { alert('Credenciales incorrectas'); }
+        });
+    }
+
+    // --- LOGOUT ADMIN ---
+    window.logoutAdmin = () => {
+        localStorage.removeItem('isAdminLoggedIn');
+        localStorage.removeItem('currentRole');
+        
+        currentRole = 'guest';
+        updateRoleUI();
+        
+        navigateTo('inicio');
+    };
+
+    // ========== FUNCIONES PARA ADMIN (FILTROS Y PAGINACIÓN) ==========
+    window.loadAdminData = async () => {
+        if (localStorage.getItem('isAdminLoggedIn') !== 'true') { navigateTo('admin-login'); return; }
+
+        try {
+            globalPasaportes = await db.getTable('Pasaporte');
+            globalEstablecimientos = await db.getTable('Establecimiento');
+            globalSellos = await db.getTable('Sello');
+            
+            pasaportePagination.filteredData = [...globalPasaportes];
+            establecimientoPagination.filteredData = [...globalEstablecimientos];
+            selloPagination.filteredData = [...globalSellos];
+            
+            renderPasaporteTable();
+            renderEstablecimientoTable();
+            renderSelloTable();
+            
+            document.getElementById('pasaporte-count').textContent = `${globalPasaportes.length} pasaportes`;
+            document.getElementById('establecimiento-count').textContent = `${globalEstablecimientos.length} establecimientos`;
+            document.getElementById('sello-count').textContent = `${globalSellos.length} sellos`;
+            
+        } catch (error) {
+            console.error('Error cargando datos admin:', error);
+        }
+    };
+
+    // --- FUNCIONES PASAPORTES ---
+    function renderPasaporteTable() {
+        const tbody = document.getElementById('pasaporte-table-body');
+        const data = pasaportePagination.filteredData;
+        const page = pasaportePagination.page;
+        const pageSize = pasaportePagination.pageSize;
+        
+        const conteoSellos = {};
+        globalSellos.forEach(s => {
+            conteoSellos[s.id_pasaporte] = (conteoSellos[s.id_pasaporte] || 0) + 1;
+        });
+        
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = data.slice(start, end);
+        
+        tbody.innerHTML = '';
+        
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 30px;">No se encontraron pasaportes</td></tr>';
+        } else {
+            pageData.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <button class="action-btn" onclick="verDetallePasaporte(${p.id})" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                    <td>${p.id}</td>
+                    <td>${p.email}</td>
+                    <td>${conteoSellos[p.id] || 0}</td>
+                    <td>${p.nombre || '-'}</td>
+                    <td>${p.direccion || '-'}</td>
+                    <td>${p.codigo_postal || '-'}</td>
+                    <td>${p.tlf || '-'}</td>
+                    <td>${p.acep_cond ? 'Sí' : 'No'}</td>
+                    <td>${p.suscrito ? 'Sí' : 'No'}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        updatePasaportePagination(data.length);
+    }
+
+    function updatePasaportePagination(totalItems) {
+        const page = pasaportePagination.page;
+        const pageSize = pasaportePagination.pageSize;
+        const totalPages = Math.ceil(totalItems / pageSize);
+        
+        document.getElementById('pasaporte-pagination-info').innerHTML = 
+            `Mostrando ${totalItems === 0 ? 0 : (page - 1) * pageSize + 1} - ${Math.min(page * pageSize, totalItems)} de ${totalItems} pasaportes`;
+        
+        let buttonsHtml = '';
+        buttonsHtml += `<button class="page-btn" onclick="changePasaportePage(1)" ${page === 1 ? 'disabled' : ''}><i class="fas fa-angle-double-left"></i></button>`;
+        buttonsHtml += `<button class="page-btn" onclick="changePasaportePage(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-angle-left"></i></button>`;
+        
+        let startPage = Math.max(1, page - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        startPage = Math.max(1, endPage - 4);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            buttonsHtml += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="changePasaportePage(${i})">${i}</button>`;
+        }
+        
+        buttonsHtml += `<button class="page-btn" onclick="changePasaportePage(${page + 1})" ${page === totalPages || totalPages === 0 ? 'disabled' : ''}><i class="fas fa-angle-right"></i></button>`;
+        buttonsHtml += `<button class="page-btn" onclick="changePasaportePage(${totalPages})" ${page === totalPages || totalPages === 0 ? 'disabled' : ''}><i class="fas fa-angle-double-right"></i></button>`;
+        
+        document.getElementById('pasaporte-pagination-buttons').innerHTML = buttonsHtml;
+    }
+
+    window.changePasaportePage = (page) => {
+        pasaportePagination.page = page;
+        renderPasaporteTable();
+    };
+
+    window.changePasaportePageSize = () => {
+        const select = document.getElementById('pasaporte-rows-per-page');
+        pasaportePagination.pageSize = parseInt(select.value);
+        pasaportePagination.page = 1;
+        renderPasaporteTable();
+    };
+
+    window.applyPasaporteFilters = () => {
+        const emailFilter = document.getElementById('filter-pasaporte-email').value.toLowerCase().trim();
+        const nombreFilter = document.getElementById('filter-pasaporte-nombre').value.toLowerCase().trim();
+        const sellosFilter = document.getElementById('filter-pasaporte-sellos').value;
+        
+        const conteoSellos = {};
+        globalSellos.forEach(s => {
+            conteoSellos[s.id_pasaporte] = (conteoSellos[s.id_pasaporte] || 0) + 1;
+        });
+        
+        pasaportePagination.filteredData = globalPasaportes.filter(p => {
+            if (emailFilter && !p.email.toLowerCase().includes(emailFilter)) return false;
+            if (nombreFilter && (!p.nombre || !p.nombre.toLowerCase().includes(nombreFilter))) return false;
+            const numSellos = conteoSellos[p.id] || 0;
+            if (sellosFilter === '0' && numSellos !== 0) return false;
+            if (sellosFilter === '1-3' && (numSellos < 1 || numSellos > 3)) return false;
+            if (sellosFilter === '4+' && numSellos < 4) return false;
+            return true;
+        });
+        
+        pasaportePagination.page = 1;
+        renderPasaporteTable();
+    };
+
+    window.resetPasaporteFilters = () => {
+        document.getElementById('filter-pasaporte-email').value = '';
+        document.getElementById('filter-pasaporte-nombre').value = '';
+        document.getElementById('filter-pasaporte-sellos').value = '';
+        pasaportePagination.filteredData = [...globalPasaportes];
+        pasaportePagination.page = 1;
+        renderPasaporteTable();
+    };
+
+    // --- FUNCIONES ESTABLECIMIENTOS ---
+    function renderEstablecimientoTable() {
+        const tbody = document.getElementById('establecimiento-table-body');
+        const data = establecimientoPagination.filteredData;
+        const page = establecimientoPagination.page;
+        const pageSize = establecimientoPagination.pageSize;
+        
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = data.slice(start, end);
+        
+        tbody.innerHTML = '';
+        
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;">No se encontraron establecimientos</td></tr>';
+        } else {
+            pageData.forEach(e => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <button class="action-btn" onclick="verDetalleEstablecimiento(${e.id})" title="Ver detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                    <td>${e.id}</td>
+                    <td>${e.nombre || '-'}</td>
+                    <td>${e.email}</td>
+                    <td>${e.type || '-'}</td>
+                    <td>${e.direccion || '-'}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        updateEstablecimientoPagination(data.length);
+    }
+
+    function updateEstablecimientoPagination(totalItems) {
+        const page = establecimientoPagination.page;
+        const pageSize = establecimientoPagination.pageSize;
+        const totalPages = Math.ceil(totalItems / pageSize);
+        
+        document.getElementById('establecimiento-pagination-info').innerHTML = 
+            `Mostrando ${totalItems === 0 ? 0 : (page - 1) * pageSize + 1} - ${Math.min(page * pageSize, totalItems)} de ${totalItems} establecimientos`;
+        
+        let buttonsHtml = '';
+        buttonsHtml += `<button class="page-btn" onclick="changeEstablecimientoPage(1)" ${page === 1 ? 'disabled' : ''}><i class="fas fa-angle-double-left"></i></button>`;
+        buttonsHtml += `<button class="page-btn" onclick="changeEstablecimientoPage(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-angle-left"></i></button>`;
+        
+        let startPage = Math.max(1, page - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        startPage = Math.max(1, endPage - 4);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            buttonsHtml += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="changeEstablecimientoPage(${i})">${i}</button>`;
+        }
+        
+        buttonsHtml += `<button class="page-btn" onclick="changeEstablecimientoPage(${page + 1})" ${page === totalPages || totalPages === 0 ? 'disabled' : ''}><i class="fas fa-angle-right"></i></button>`;
+        buttonsHtml += `<button class="page-btn" onclick="changeEstablecimientoPage(${totalPages})" ${page === totalPages || totalPages === 0 ? 'disabled' : ''}><i class="fas fa-angle-double-right"></i></button>`;
+        
+        document.getElementById('establecimiento-pagination-buttons').innerHTML = buttonsHtml;
+    }
+
+    window.changeEstablecimientoPage = (page) => {
+        establecimientoPagination.page = page;
+        renderEstablecimientoTable();
+    };
+
+    window.changeEstablecimientoPageSize = () => {
+        const select = document.getElementById('establecimiento-rows-per-page');
+        establecimientoPagination.pageSize = parseInt(select.value);
+        establecimientoPagination.page = 1;
+        renderEstablecimientoTable();
+    };
+
+    window.applyEstablecimientoFilters = () => {
+        const nombreFilter = document.getElementById('filter-establecimiento-nombre').value.toLowerCase().trim();
+        const emailFilter = document.getElementById('filter-establecimiento-email').value.toLowerCase().trim();
+        const tipoFilter = document.getElementById('filter-establecimiento-tipo').value;
+        
+        establecimientoPagination.filteredData = globalEstablecimientos.filter(e => {
+            if (nombreFilter && (!e.nombre || !e.nombre.toLowerCase().includes(nombreFilter))) return false;
+            if (emailFilter && !e.email.toLowerCase().includes(emailFilter)) return false;
+            if (tipoFilter && e.type !== tipoFilter) return false;
+            return true;
+        });
+        
+        establecimientoPagination.page = 1;
+        renderEstablecimientoTable();
+    };
+
+    window.resetEstablecimientoFilters = () => {
+        document.getElementById('filter-establecimiento-nombre').value = '';
+        document.getElementById('filter-establecimiento-email').value = '';
+        document.getElementById('filter-establecimiento-tipo').value = '';
+        establecimientoPagination.filteredData = [...globalEstablecimientos];
+        establecimientoPagination.page = 1;
+        renderEstablecimientoTable();
+    };
+
+    // --- FUNCIONES SELLOS ---
+    function renderSelloTable() {
+        const tbody = document.getElementById('sello-table-body');
+        const data = selloPagination.filteredData;
+        const page = selloPagination.page;
+        const pageSize = selloPagination.pageSize;
+        
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = data.slice(start, end);
+        
+        tbody.innerHTML = '';
+        
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px;">No se encontraron sellos</td></tr>';
+        } else {
+            pageData.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.id_pasaporte}</td>
+                    <td>${s.id_establecimiento}</td>
+                    <td>${formatDate(s.fecha_reg)}</td>
+                    <td>${formatDate(s.fecha_cad)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        updateSelloPagination(data.length);
+    }
+
+    function updateSelloPagination(totalItems) {
+        const page = selloPagination.page;
+        const pageSize = selloPagination.pageSize;
+        const totalPages = Math.ceil(totalItems / pageSize);
+        
+        document.getElementById('sello-pagination-info').innerHTML = 
+            `Mostrando ${totalItems === 0 ? 0 : (page - 1) * pageSize + 1} - ${Math.min(page * pageSize, totalItems)} de ${totalItems} sellos`;
+        
+        let buttonsHtml = '';
+        buttonsHtml += `<button class="page-btn" onclick="changeSelloPage(1)" ${page === 1 ? 'disabled' : ''}><i class="fas fa-angle-double-left"></i></button>`;
+        buttonsHtml += `<button class="page-btn" onclick="changeSelloPage(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-angle-left"></i></button>`;
+        
+        let startPage = Math.max(1, page - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        startPage = Math.max(1, endPage - 4);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            buttonsHtml += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="changeSelloPage(${i})">${i}</button>`;
+        }
+        
+        buttonsHtml += `<button class="page-btn" onclick="changeSelloPage(${page + 1})" ${page === totalPages || totalPages === 0 ? 'disabled' : ''}><i class="fas fa-angle-right"></i></button>`;
+        buttonsHtml += `<button class="page-btn" onclick="changeSelloPage(${totalPages})" ${page === totalPages || totalPages === 0 ? 'disabled' : ''}><i class="fas fa-angle-double-right"></i></button>`;
+        
+        document.getElementById('sello-pagination-buttons').innerHTML = buttonsHtml;
+    }
+
+    window.changeSelloPage = (page) => {
+        selloPagination.page = page;
+        renderSelloTable();
+    };
+
+    window.changeSelloPageSize = () => {
+        const select = document.getElementById('sello-rows-per-page');
+        selloPagination.pageSize = parseInt(select.value);
+        selloPagination.page = 1;
+        renderSelloTable();
+    };
+
+    window.applySelloFilters = () => {
+        const pasaporteFilter = document.getElementById('filter-sello-pasaporte').value.trim();
+        const establecimientoFilter = document.getElementById('filter-sello-establecimiento').value.trim();
+        const fechaDesde = document.getElementById('filter-sello-fecha-desde').value;
+        const fechaHasta = document.getElementById('filter-sello-fecha-hasta').value;
+        
+        selloPagination.filteredData = globalSellos.filter(s => {
+            if (pasaporteFilter && s.id_pasaporte.toString() !== pasaporteFilter) return false;
+            if (establecimientoFilter && s.id_establecimiento.toString() !== establecimientoFilter) return false;
+            
+            if (fechaDesde) {
+                const fechaSello = new Date(s.fecha_reg).setHours(0,0,0,0);
+                const fechaDesdeObj = new Date(fechaDesde).setHours(0,0,0,0);
+                if (fechaSello < fechaDesdeObj) return false;
+            }
+            if (fechaHasta) {
+                const fechaSello = new Date(s.fecha_reg).setHours(0,0,0,0);
+                const fechaHastaObj = new Date(fechaHasta).setHours(0,0,0,0);
+                if (fechaSello > fechaHastaObj) return false;
+            }
+            return true;
+        });
+        
+        selloPagination.page = 1;
+        renderSelloTable();
+    };
+
+    window.resetSelloFilters = () => {
+        document.getElementById('filter-sello-pasaporte').value = '';
+        document.getElementById('filter-sello-establecimiento').value = '';
+        document.getElementById('filter-sello-fecha-desde').value = '';
+        document.getElementById('filter-sello-fecha-hasta').value = '';
+        selloPagination.filteredData = [...globalSellos];
+        selloPagination.page = 1;
+        renderSelloTable();
+    };
+
+    // --- FUNCIONES DETALLES ---
+    window.verDetallePasaporte = async function(id) {
+        try {
+            const pasaporte = await db.getPasaporte(id);
+            if (!pasaporte) { alert('Pasaporte no encontrado'); return; }
+            const sellos = await db.getSellosByPasaporte(id);
+            
+            document.getElementById('detalle-pasaporte-id').textContent = pasaporte.id;
+            document.getElementById('detalle-pasaporte-email').textContent = pasaporte.email;
+            document.getElementById('detalle-pasaporte-nombre').textContent = pasaporte.nombre || 'No disponible';
+            document.getElementById('detalle-pasaporte-direccion').textContent = pasaporte.direccion || 'No disponible';
+            document.getElementById('detalle-pasaporte-cp').textContent = pasaporte.codigo_postal || 'No disponible';
+            document.getElementById('detalle-pasaporte-tlf').textContent = pasaporte.tlf || 'No disponible';
+            document.getElementById('detalle-pasaporte-condiciones').textContent = pasaporte.acep_cond ? 'Sí' : 'No';
+            document.getElementById('detalle-pasaporte-newsletter').textContent = pasaporte.suscrito ? 'Sí' : 'No';
+            document.getElementById('detalle-pasaporte-total-sellos').textContent = sellos.length;
+
+            const sellosList = document.getElementById('detalle-pasaporte-sellos-list');
+            sellosList.innerHTML = '';
+            
+            if (sellos.length === 0) {
+                sellosList.innerHTML = '<p style="padding: 20px; text-align:center;">No hay sellos registrados</p>';
+            } else {
+                sellos.sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+                for (const sello of sellos) {
+                    const establecimiento = await db.getEstablecimiento(sello.id_establecimiento);
+                    const div = document.createElement('div');
+                    div.style.padding = '12px';
+                    div.style.borderBottom = '1px solid var(--border)';
+                    div.innerHTML = `
+                        <div><strong>Establecimiento:</strong> ${establecimiento?.nombre || 'Desconocido'} (ID: ${sello.id_establecimiento})</div>
+                        <div><strong>Fecha de registro:</strong> ${formatDate(sello.fecha_reg)}</div>
+                        <div><strong>Fecha de caducidad:</strong> ${formatDate(sello.fecha_cad)}</div>
+                    `;
+                    sellosList.appendChild(div);
+                }
+            }
+            navigateTo('detalle-pasaporte');
+        } catch (error) {
+            console.error('Error al cargar detalle del pasaporte:', error);
+            alert('Error al cargar los detalles del pasaporte');
+        }
+    };
+
+    window.verDetalleEstablecimiento = async function(id) {
+        try {
+            const establecimiento = await db.getEstablecimiento(id);
+            if (!establecimiento) { alert('Establecimiento no encontrado'); return; }
+            const sellos = await db.getSellosByEstablecimiento(id);
+            const pasaportesUnicos = [...new Set(sellos.map(s => s.id_pasaporte))];
+
+            document.getElementById('detalle-establecimiento-id').textContent = establecimiento.id;
+            document.getElementById('detalle-establecimiento-nombre').textContent = establecimiento.nombre || 'No disponible';
+            document.getElementById('detalle-establecimiento-email').textContent = establecimiento.email;
+            document.getElementById('detalle-establecimiento-tipo').textContent = establecimiento.type || 'No disponible';
+            document.getElementById('detalle-establecimiento-direccion').textContent = establecimiento.direccion || 'No disponible';
+            document.getElementById('detalle-establecimiento-descripcion').textContent = establecimiento.descripcion || 'No disponible';
+            document.getElementById('detalle-establecimiento-total-sellos').textContent = sellos.length;
+            document.getElementById('detalle-establecimiento-visitantes').textContent = pasaportesUnicos.length;
+
+            const sellosList = document.getElementById('detalle-establecimiento-sellos-list');
+            sellosList.innerHTML = '';
+            
+            if (sellos.length === 0) {
+                sellosList.innerHTML = '<p style="padding: 20px; text-align:center;">No se han emitido sellos</p>';
+            } else {
+                sellos.sort((a, b) => new Date(b.fecha_reg) - new Date(a.fecha_reg));
+                const sellosRecientes = sellos.slice(0, 20);
+                for (const sello of sellosRecientes) {
+                    const pasaporte = await db.getPasaporte(sello.id_pasaporte);
+                    const div = document.createElement('div');
+                    div.style.padding = '12px';
+                    div.style.borderBottom = '1px solid var(--border)';
+                    div.innerHTML = `
+                        <div><strong>Pasaporte ID:</strong> ${sello.id_pasaporte}</div>
+                        <div><strong>Email:</strong> ${pasaporte?.email || 'Desconocido'}</div>
+                        <div><strong>Nombre:</strong> ${pasaporte?.nombre || 'No disponible'}</div>
+                        <div><strong>Dirección:</strong> ${pasaporte?.direccion || 'No disponible'}</div>
+                        <div><strong>C.P.:</strong> ${pasaporte?.codigo_postal || 'No disponible'}</div>
+                        <div><strong>Fecha de registro:</strong> ${formatDate(sello.fecha_reg)}</div>
+                    `;
+                    sellosList.appendChild(div);
+                }
+                if (sellos.length > 20) {
+                    const div = document.createElement('div');
+                    div.style.padding = '12px';
+                    div.style.textAlign = 'center';
+                    div.style.fontStyle = 'italic';
+                    div.textContent = `... y ${sellos.length - 20} sellos más`;
+                    sellosList.appendChild(div);
+                }
+            }
+            navigateTo('detalle-establecimiento');
+        } catch (error) {
+            console.error('Error al cargar detalle del establecimiento:', error);
+            alert('Error al cargar los detalles del establecimiento');
+        }
+    };
+
+    // --- ALTA ESTABLECIMIENTO ---
+    const altaForm = document.getElementById('alta-establecimiento-form');
+    if (altaForm) {
+        altaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!document.getElementById('recaptcha-alta').checked) { alert('Verifica recaptcha'); return; }
+            const pass = document.getElementById('alta-password').value;
+            if (pass !== document.getElementById('alta-confirm-password').value) { alert('Contraseñas no coinciden'); return; }
+            const email = document.getElementById('alta-email').value.trim();
+            
+            try {
+                await db.addEstablecimiento({
+                    email: email,
+                    passwd: pass,
+                    nombre: document.getElementById('alta-nombre').value,
+                    type: document.getElementById('alta-tipo').value,
+                    direccion: document.getElementById('alta-direccion').value,
+                    descripcion: document.getElementById('alta-descripcion').value
+                });
+                alert('Establecimiento registrado.');
+                altaForm.reset();
+            } catch (ex) { alert('Error al registrar (posible email duplicado): ' + ex.message); }
+        });
+    }
+
+    // ========== DASHBOARD CON GRÁFICOS ==========
+    window.loadEstadisticasCompletas = async () => {
+        try {
+            const pasaportes = await db.getTable('Pasaporte');
+            const establecimientos = await db.getTable('Establecimiento');
+            const sellos = await db.getTable('Sello');
+            
+            document.getElementById('total-pasaportes').textContent = pasaportes.length;
+            document.getElementById('total-establecimientos').textContent = establecimientos.length;
+            document.getElementById('total-sellos').textContent = sellos.length;
+            
+            const counts = {};
+            sellos.forEach(s => {
+                if(!counts[s.id_pasaporte]) counts[s.id_pasaporte] = new Set();
+                counts[s.id_pasaporte].add(s.id_establecimiento);
+            });
+            const completos = Object.values(counts).filter(set => set.size >= 4).length;
+            document.getElementById('pasaportes-completos').textContent = completos;
+            
+            const promedio = pasaportes.length > 0 ? (sellos.length / pasaportes.length).toFixed(1) : 0;
+            document.getElementById('promedio-sellos').textContent = promedio;
+            
+            const tasaCompletados = pasaportes.length > 0 ? ((completos / pasaportes.length) * 100).toFixed(1) : 0;
+            document.getElementById('tasa-completados').textContent = `${tasaCompletados}%`;
+            
+            const establecimientosConSellos = new Set(sellos.map(s => s.id_establecimiento)).size;
+            document.getElementById('establecimientos-activos').textContent = establecimientosConSellos;
+            
+            const ahora = new Date();
+            const mesActual = ahora.getMonth();
+            const añoActual = ahora.getFullYear();
+            const nuevosEsteMes = pasaportes.filter(p => {
+                const fecha = new Date(p.created_at || Date.now());
+                return fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual;
+            }).length;
+            document.getElementById('ultimo-mes').textContent = nuevosEsteMes;
+            
+            document.getElementById('trend-pasaportes').innerHTML = `<i class="fas fa-arrow-up" style="color: var(--success);"></i> +12% este mes`;
+            document.getElementById('trend-establecimientos').innerHTML = `<i class="fas fa-arrow-up" style="color: var(--success);"></i> +5% este mes`;
+            document.getElementById('trend-sellos').innerHTML = `<i class="fas fa-arrow-up" style="color: var(--success);"></i> +23% este mes`;
+            
+            Object.values(chartInstances).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            chartInstances = {};
+            
+            await crearGraficos(establecimientos, sellos, pasaportes);
+            
+        } catch (error) {
+            console.error('Error cargando estadísticas:', error);
+        }
+    };
+
+    async function crearGraficos(establecimientos, sellos, pasaportes) {
+        const tiposMap = new Map();
+        establecimientos.forEach(e => {
+            const tipo = e.type || 'Otro';
+            tiposMap.set(tipo, (tiposMap.get(tipo) || 0) + 1);
+        });
+        
+        const ctx1 = document.getElementById('chart-tipos').getContext('2d');
+        chartInstances.tipos = new Chart(ctx1, {
+            type: 'pie',
+            data: {
+                labels: Array.from(tiposMap.keys()),
+                datasets: [{
+                    data: Array.from(tiposMap.values()),
+                    backgroundColor: ['#8B1E3F', '#2C5530', '#3498DB', '#F39C12', '#9B59B6', '#E67E22'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const sellosPorEstablecimiento = new Map();
+        sellos.forEach(s => {
+            sellosPorEstablecimiento.set(s.id_establecimiento, (sellosPorEstablecimiento.get(s.id_establecimiento) || 0) + 1);
+        });
+        
+        const topEstablecimientos = Array.from(sellosPorEstablecimiento.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([id, count]) => {
+                const est = establecimientos.find(e => e.id === id);
+                return { nombre: est?.nombre || `ID ${id}`, count };
+            });
+        
+        const ctx2 = document.getElementById('chart-top-establecimientos').getContext('2d');
+        chartInstances.topEst = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: topEstablecimientos.map(e => e.nombre.length > 15 ? e.nombre.substring(0, 15) + '...' : e.nombre),
+                datasets: [{
+                    label: 'Sellos emitidos',
+                    data: topEstablecimientos.map(e => e.count),
+                    backgroundColor: '#8B1E3F',
+                    borderRadius: 6
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#E5E5E5' } } } }
+        });
+
+        const sellosPorTipo = new Map();
+        sellos.forEach(s => {
+            const est = establecimientos.find(e => e.id === s.id_establecimiento);
+            const tipo = est?.type || 'Otro';
+            sellosPorTipo.set(tipo, (sellosPorTipo.get(tipo) || 0) + 1);
+        });
+        
+        const ctx3 = document.getElementById('chart-sellos-tipo').getContext('2d');
+        chartInstances.sellosTipo = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: Array.from(sellosPorTipo.keys()),
+                datasets: [{
+                    label: 'Sellos emitidos',
+                    data: Array.from(sellosPorTipo.values()),
+                    backgroundColor: '#2C5530',
+                    borderRadius: 6
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const meses = [];
+        const datosPasaportes = [];
+        const datosSellos = [];
+        
+        for (let i = 5; i >= 0; i--) {
+            const fecha = new Date();
+            fecha.setMonth(fecha.getMonth() - i);
+            const mes = fecha.toLocaleString('es-ES', { month: 'short' });
+            meses.push(mes.charAt(0).toUpperCase() + mes.slice(1));
+            
+            const pasaportesMes = pasaportes.filter(p => {
+                const fechaP = new Date(p.created_at || Date.now());
+                return fechaP.getMonth() === fecha.getMonth() && fechaP.getFullYear() === fecha.getFullYear();
+            }).length;
+            datosPasaportes.push(pasaportesMes);
+            
+            const sellosMes = sellos.filter(s => {
+                const fechaS = new Date(s.fecha_reg);
+                return fechaS.getMonth() === fecha.getMonth() && fechaS.getFullYear() === fecha.getFullYear();
+            }).length;
+            datosSellos.push(sellosMes);
+        }
+        
+        const ctx4 = document.getElementById('chart-evolucion').getContext('2d');
+        chartInstances.evolucion = new Chart(ctx4, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [
+                    { label: 'Pasaportes', data: datosPasaportes, borderColor: '#8B1E3F', backgroundColor: 'rgba(139, 30, 63, 0.05)', tension: 0.3, fill: true },
+                    { label: 'Sellos', data: datosSellos, borderColor: '#2C5530', backgroundColor: 'rgba(44, 85, 48, 0.05)', tension: 0.3, fill: true }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { mode: 'index' } }, scales: { y: { beginAtZero: true, grid: { color: '#E5E5E5' } } } }
+        });
+
+        const ubicaciones = ['Valladolid', 'Ribera del Duero', 'Rueda', 'Cigales', 'Toro', 'Otros'];
+        const datosUbicacion = [35, 25, 20, 10, 5, 5];
+        
+        const ctx5 = document.getElementById('chart-ubicacion').getContext('2d');
+        chartInstances.ubicacion = new Chart(ctx5, {
+            type: 'doughnut',
+            data: {
+                labels: ubicaciones,
+                datasets: [{
+                    data: datosUbicacion,
+                    backgroundColor: ['#8B1E3F', '#2C5530', '#FFD166', '#3498DB', '#F39C12', '#9B59B6'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    window.switchDashboardTab = (tab) => {
+        document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        document.getElementById('dashboard-general').style.display = tab === 'general' ? 'block' : 'none';
+        document.getElementById('dashboard-establecimientos').style.display = tab === 'establecimientos' ? 'block' : 'none';
+        document.getElementById('dashboard-evolucion').style.display = tab === 'evolucion' ? 'block' : 'none';
+    };
+
+    window.sortTable = function(tableId, colIndex, type) {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let dir = 'asc';
+        if (currentSort.tableId === tableId && currentSort.columnIndex === colIndex) {
+            dir = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        }
+        currentSort = { tableId, columnIndex: colIndex, direction: dir, type };
+        
+        rows.sort((a, b) => {
+            const aTxt = a.cells[colIndex].textContent.trim();
+            const bTxt = b.cells[colIndex].textContent.trim();
+            if (type === 'number') return dir === 'asc' ? aTxt - bTxt : bTxt - aTxt;
+            if (type === 'date') {
+                const p = t => { const parts = t.split('/'); return new Date(parts[2], parts[1]-1, parts[0]).getTime(); }
+                return dir === 'asc' ? p(aTxt) - p(bTxt) : p(bTxt) - p(aTxt);
+            }
+            return dir === 'asc' ? aTxt.localeCompare(bTxt) : bTxt.localeCompare(aTxt);
+        });
+        rows.forEach(r => tbody.appendChild(r));
+    };
+
+    // ========== FUNCIONES PWA ==========
+    function createPwaParticles() {
+        const container = document.getElementById('pwaParticles');
+        if (!container) return;
+        container.innerHTML = '';
+        const particleCount = 30;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('pwa-particle');
+            
+            const size = Math.random() * 4 + 1;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.opacity = Math.random() * 0.2 + 0.1;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
+            
+            container.appendChild(particle);
+        }
+    }
+
+    window.togglePwaModal = function() {
+        const overlay = document.getElementById('pwaModalOverlay');
+        overlay.classList.toggle('show');
+        createPwaParticles();
+    };
+
+    window.closePwaModal = function() {
+        document.getElementById('pwaModalOverlay').classList.remove('show');
+    };
+
+    window.installPWA = async function() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const fab = document.getElementById('pwaFab');
+        
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                handleInstallSuccess();
+            }
+            deferredPrompt = null;
+        } 
+        else if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+            alert('La aplicación ya está instalada en tu dispositivo.');
+        } 
+        else {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            if (isIOS) {
+                alert('📱 Para instalar en iOS:\n1. Pulsa el botón Compartir (📤)\n2. Selecciona "Añadir a pantalla de inicio"\n3. Confirma la instalación');
+            } else if (isAndroid) {
+                alert('📱 Para instalar en Android:\n1. Abre el menú del navegador (⋮)\n2. Selecciona "Instalar aplicación" o "Añadir a pantalla de inicio"');
+            } else {
+                alert('📱 Para instalar en escritorio:\nBusca el icono de instalación en la barra de direcciones o usa el menú del navegador.');
+            }
+        }
+    };
+
+    function handleInstallSuccess() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const fab = document.getElementById('pwaFab');
+        
+        if (installBtn) {
+            installBtn.innerHTML = '<i class="fas fa-check"></i><span>¡Instalada!</span>';
+            installBtn.disabled = true;
+        }
+        
+        if (fab) {
+            fab.classList.add('hidden');
+            fab.classList.add('installed');
+            fab.innerHTML = '<i class="fas fa-check"></i>';
+        }
+        
+        isPWAInstalled = true;
+        localStorage.setItem('pwaInstalled', 'true');
+        
+        setTimeout(() => {
+            closePwaModal();
+        }, 1500);
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) {
+            installBtn.disabled = false;
+            installBtn.innerHTML = '<i class="fas fa-download"></i><span>Instalar Aplicación</span>';
+        }
+        
+        if (!localStorage.getItem('pwaModalShown') && !localStorage.getItem('pwaInstalled')) {
+            setTimeout(() => {
+                togglePwaModal();
+                localStorage.setItem('pwaModalShown', 'true');
+            }, 3000);
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        handleInstallSuccess();
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        handleInstallSuccess();
+    }
+
+    // ========== FUNCIONES DEL MODAL DE PERFIL ==========
+    window.openProfileModal = function() {
+        const modal = document.getElementById('profile-modal-overlay');
+        modal.classList.add('active');
+        generateProfileOptions();
+    };
+
+    window.closeProfileModal = function(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('profile-modal-overlay').classList.remove('active');
+    };
+
+    function generateProfileOptions() {
+        const container = document.getElementById('profile-options');
+        let html = '';
+        
+        // Opción 1: Pasaporte
+        const isPasaporteLogged = !!localStorage.getItem('currentPasaporteId');
+        if (isPasaporteLogged && currentRole === 'pasaporte') {
+            html += `
+                <div class="profile-option logged-in" onclick="navigateTo('mipasaporte'); closeProfileModal();">
+                    <div class="profile-option-icon pasaporte">
+                        <i class="fas fa-passport"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Mi Pasaporte</h3>
+                        <p>Accede a tu perfil de viajero</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="profile-option" onclick="closeProfileModal(); navigateTo('mipasaporte');">
+                    <div class="profile-option-icon pasaporte">
+                        <i class="fas fa-passport"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Mi Pasaporte</h3>
+                        <p>Accede a tu perfil de viajero</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        }
+        
+        // Opción 2: Establecimiento
+        const isEstablecimientoLogged = !!localStorage.getItem('currentEstablecimientoId');
+        if (isEstablecimientoLogged && currentRole === 'establecimiento') {
+            html += `
+                <div class="profile-option logged-in" onclick="navigateTo('miestablecimiento'); closeProfileModal();">
+                    <div class="profile-option-icon establecimiento">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Mi Establecimiento</h3>
+                        <p>Panel de gestión de tu negocio</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="profile-option" onclick="closeProfileModal(); navigateTo('miestablecimiento');">
+                    <div class="profile-option-icon establecimiento">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Mi Establecimiento</h3>
+                        <p>Panel de gestión de tu negocio</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        }
+        
+        // Opción 3: Admin
+        const isAdminLogged = localStorage.getItem('isAdminLoggedIn') === 'true';
+        if (isAdminLogged && currentRole === 'admin') {
+            html += `
+                <div class="profile-option logged-in" onclick="navigateTo('admin'); closeProfileModal();">
+                    <div class="profile-option-icon admin">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Administrador</h3>
+                        <p>Panel de administración completo</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="profile-option" onclick="closeProfileModal(); navigateTo('admin-login');">
+                    <div class="profile-option-icon admin">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Administrador</h3>
+                        <p>Panel de administración completo</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        }
+        
+        // Opción de logout si hay alguien logueado
+        if (currentRole !== 'guest') {
+            html += `
+                <div class="menu-divider" style="margin: 8px 0;"></div>
+                <div class="profile-option logout" onclick="performLogout(); closeProfileModal();">
+                    <div class="profile-option-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="profile-option-content">
+                        <h3>Cerrar Sesión</h3>
+                        <p>Salir de la cuenta actual</p>
+                    </div>
+                    <i class="fas fa-chevron-right profile-option-arrow"></i>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+    }
+
+    window.performLogout = function() {
+        if (currentRole === 'pasaporte') {
+            logoutPasaporte();
+        } else if (currentRole === 'establecimiento') {
+            logoutEstablecimiento();
+        } else if (currentRole === 'admin') {
+            logoutAdmin();
+        }
+    };
+
+    // --- INICIALIZACIÓN ---
+    initializeRole(); // Inicializar rol antes de cargar página
+    loadPage();
+    document.getElementById('search-input').addEventListener('input', filterEstablecimientos);
+    document.querySelectorAll('.password-container i').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            input.type = input.type === 'password' ? 'text' : 'password';
+            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+        });
+    });
+    
+    createPwaParticles();
+});
+</script>
+
+<!-- Registro del Service Worker externo -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('✅ Service Worker registrado:', reg))
+      .catch(err => console.log('❌ Error al registrar SW:', err));
+  });
+}
+</script>
+
+<!-- Versión: wine-v0.13.0 - SISTEMA DE ROLES IMPLEMENTADO -->
+</body>
+</html>
+
+         
