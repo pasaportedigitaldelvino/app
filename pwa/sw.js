@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pasaporte-vino-v0.12.19';
+const CACHE_NAME = 'pasaporte-vino-v0.13';
 const urlsToCache = [
   '.',
   'index.html',
