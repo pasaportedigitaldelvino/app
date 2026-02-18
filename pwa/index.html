@@ -74,6 +74,7 @@
     /* --- HEADER MODIFICADO CON NUEVOS ICONOS --- */
     header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: var(--shadow-md); position: fixed; width: 100%; top: 0; z-index: 1000; height: 64px; backdrop-filter: blur(10px); }
     
+    .br{ display:block; }
     .header-left { display: flex; align-items: center; gap: 12px; }
     
     .logo { font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; cursor: pointer; transition: var(--transition-fast); }
@@ -1195,7 +1196,7 @@
 <!-- ========== PÁGINA INICIO ========== -->
 <section id="inicio" class="page">
     <div class="landing-header">
-        <h1>Pasaporte Turístico del Vino</h1>
+        <h1>Pasaporte Turístico<span class="br"> del Vino<span></h1>
         <p class="subtitle">
             Recorre las Rutas del Vino de Valladolid, colecciona experiencias y gana premios únicos
         </p>
@@ -3874,7 +3875,6 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- Versión: wine-v0.12.19 - SISTEMA DE ROLES IMPLEMENTADO - Footer Admin cambiado a Pasaporte -->
+<!-- Versión: wine-v0.12.18 - SISTEMA DE ROLES IMPLEMENTADO - Footer Admin cambiado a Pasaporte -->
 </body>
 </html>
-
